@@ -1,0 +1,8 @@
+.idea/
+target/
+wxyRace.iml
+Cpp.txt
+1.txt
+*.log
+logs/
+*.iml
