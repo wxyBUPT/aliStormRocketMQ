@@ -26,7 +26,7 @@ public class RaceConfig implements Serializable{
     public static Integer TairNamespace = 0;
 
     //测试环境使用配置
-    public static boolean isConsumerFromFirstOffset = true;
+    public static boolean isConsumerFromFirstOffset = false;
 
     //ReportToTairThread 多久会同步程序中的内存数据到 Tair,每次同步内存数据会被清除
     //数据单位是毫秒,当前是每半分钟同步一次数据

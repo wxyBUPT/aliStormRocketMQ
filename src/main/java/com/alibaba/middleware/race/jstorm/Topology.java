@@ -54,16 +54,19 @@ public class Topology {
         //初始化三个bolt
         RocketSpout tbOrderSpout = new RocketSpout(
                 RaceConfig.MqTaoboaTradeTopic,
-                RaceConfig.MetaConsumerGroup + RaceConfig.MqTaoboaTradeTopic,
+                RaceConfig.MetaConsumerGroup,
+                //RaceConfig.MetaConsumerGroup + RaceConfig.MqTaoboaTradeTopic,
                 null);
         RocketSpout tmOrderSpout = new RocketSpout(
                 RaceConfig.MqTmallTradeTopic,
-                RaceConfig.MetaConsumerGroup + RaceConfig.MqTmallTradeTopic,
+                RaceConfig.MetaConsumerGroup,
+                //RaceConfig.MetaConsumerGroup + RaceConfig.MqTmallTradeTopic ,
                 null);
 
         RocketSpout paymentSpout = new RocketSpout(
                 RaceConfig.MqPayTopic,
-                RaceConfig.MetaConsumerGroup+RaceConfig.MqPayTopic,
+                RaceConfig.MetaConsumerGroup,
+                //RaceConfig.MetaConsumerGroup + RaceConfig.MqPayTopic,
                 null,1
         );
 

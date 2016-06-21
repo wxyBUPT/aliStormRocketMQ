@@ -15,6 +15,7 @@ import com.alibaba.rocketmq.client.consumer.DefaultMQPushConsumer;
 import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import com.alibaba.rocketmq.client.consumer.listener.MessageListenerConcurrently;
+import com.alibaba.rocketmq.client.exception.MQClientException;
 import com.alibaba.rocketmq.common.message.MessageExt;
 import org.apache.log4j.Logger;
 
@@ -53,7 +54,7 @@ public class RocketSpout implements IRichSpout,
     private final String rocketConsumeTopic;
     private final String rocketConsumeGroup;
     private final String nameServer;
-    private final String subExp = null;
+    private final String subExp = "*";
     //设置consumer 默认的 batchSize
     private int pullBatchSize = 32;
 
@@ -134,7 +135,7 @@ public class RocketSpout implements IRichSpout,
         );
 
         StringBuilder sb = new StringBuilder();
-        sb.append("Begin to init MetaSpout:").append(id);
+        sb.append("Begin to init MqSpout:").append(id);
         sb.append(",flowControl:").append(flowControl);
         sb.append(", autoAck:").append(autoAck);
         LOG.info(sb.toString());
@@ -150,12 +151,12 @@ public class RocketSpout implements IRichSpout,
         try{
             consumer = RocketConsumerFactory.mkInstance(rocketClientConfig,this);
         }catch(Exception e){
-            LOG.error("Failed to create Meta Consumer ",e);
+            LOG.error("Failed to create Mq Consumer ",e);
             throw new RuntimeException("Failed to create RocketConsumer" + id,e);
         }
 
         if(consumer == null){
-            LOG.warn(id + "already exist consumer in current worker, don't need to fetch data");
+            LOG.error(id + "already exist consumer in current worker, don't need to fetch data");
             //启动新的线程发送没有产生消息的信息
             new Thread(new Runnable() {
                 @Override

@@ -52,7 +52,7 @@ public class OrderWriteBolt implements IRichBolt{
     }
 
     public void execute(Tuple tuple){
-        LOG.info("从rocketMq spout 中接到订单信息");
+        LOG.debug("从rocketMq spout 中接到订单信息");
         RocketTuple rocketTuple = (RocketTuple)tuple.getValue(0);
         List<MessageExt> messageExtList = rocketTuple.getMsgList();
         boolean allSendSucceed = true;

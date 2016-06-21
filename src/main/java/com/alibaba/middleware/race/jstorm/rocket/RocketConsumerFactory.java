@@ -32,15 +32,13 @@ public class RocketConsumerFactory {
         if(consumer !=null){
             LOG.info("Consumer of " + key + "has been created,don't recreate it");
 
-            return consumer;
+            return null;
         }
         StringBuilder stringBuilder= new StringBuilder();
         stringBuilder.append("Begin to init rocket client");
         stringBuilder.append(",configuration:").append(config);
 
         LOG.info(stringBuilder.toString());
-
-        consumer = new DefaultMQPushConsumer(config.getConsumerGroup());
 
         //下面的代码为获得rocketmq nameServer 地址,默认使用如下方式获得,如果不能获得使用下面的方式
         //通过传递的conf 信息获得Namesrv
@@ -74,18 +72,11 @@ public class RocketConsumerFactory {
         //    );
         //}
 
-        String instanceName = groupId + "@" + JStormUtils.process_pid();
+        consumer = new DefaultMQPushConsumer(config.getConsumerGroup());
+        String instanceName = topic + "@" + groupId + "@" + JStormUtils.process_pid();
         LOG.error("current instanceName: " + instanceName);
         consumer.setInstanceName(instanceName);
 
-        //设置从哪里消费信
-        //更改从哪里消费逻辑
-        if(RaceConfig.isConsumerFromFirstOffset){
-            consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
-        }else {
-            //如果不是从开始消费,那么从当前时间戳开始消费
-            consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_TIMESTAMP);
-        }
         //设置订阅Topic
         consumer.subscribe(config.getTopic(),config.getSubExpress());
         //设置pushmessageconsumer 的回调函数
@@ -97,7 +88,12 @@ public class RocketConsumerFactory {
         consumer.setPullInterval(config.getPullInterval());
         consumer.setConsumeThreadMin(config.getPullThreadNum());
         consumer.setConsumeThreadMax(config.getPullThreadNum());
-
+        if(RaceConfig.isConsumerFromFirstOffset){
+            consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
+        }else {
+            //如果不是从开始消费,那么从当前时间戳开始消费
+            consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_TIMESTAMP);
+        }
         consumer.start();
         consumers.put(key,consumer);
         LOG.info("Successfully create " + key  + "consumer, Consumer instanceName : " + consumer.getInstanceName() + ",  ConsumerGroup: " +
