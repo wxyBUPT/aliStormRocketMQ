@@ -58,6 +58,9 @@ public class OrderWriteBolt implements IRichBolt{
         boolean allSendSucceed = true;
         for(MessageExt messageExt:messageExtList){
             //开始Deserialize 付款信息
+            if(messageExt.getTopic().equals(RaceConfig.MqPayTopic)) {
+                continue;
+            }
             byte[] body = messageExt.getBody();
             if(body.length == 2 && body[0] ==0 && body[1] ==0){
                 continue;

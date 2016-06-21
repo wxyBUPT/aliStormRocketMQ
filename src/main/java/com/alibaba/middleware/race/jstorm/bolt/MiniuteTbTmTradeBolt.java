@@ -46,7 +46,7 @@ public class MiniuteTbTmTradeBolt extends BaseRichBolt {
         StringBuilder sb = new StringBuilder();
         sb.append("得到平台信息和分钟信息");
         sb.append("平台信息是: ").append(plat_tm_tb);
-        LOG.info(sb.toString());
+        LOG.debug(sb.toString());
         if(plat_tm_tb.equals("tb") ){
             Double tbMiniuteTrade = tbMiniuteTrades.get(minuteTime);
             if(tbMiniuteTrade == null){

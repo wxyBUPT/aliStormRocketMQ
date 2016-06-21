@@ -8,6 +8,7 @@ import com.alibaba.rocketmq.common.consumer.ConsumeFromWhere;
 import org.apache.log4j.Logger;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -23,10 +24,10 @@ public class RocketConsumerFactory {
     public static Map<String,DefaultMQPushConsumer>  consumers = new HashMap<String, DefaultMQPushConsumer>();
     public static synchronized DefaultMQPushConsumer mkInstance(RocketClientConfig config,
                                                                 MessageListenerConcurrently listenerConcurrently)throws Exception{
-        String topic = config.getTopic();
+        List<String> topics = config.getTopics();
         String groupId = config.getConsumerGroup();
 
-        String key = topic + "@" + groupId;
+        String key = String.join("+",topics) + "@" + groupId;
 
         DefaultMQPushConsumer consumer = consumers.get(key);
         if(consumer !=null){
@@ -73,12 +74,14 @@ public class RocketConsumerFactory {
         //}
 
         consumer = new DefaultMQPushConsumer(config.getConsumerGroup());
-        String instanceName = topic + "@" + groupId + "@" + JStormUtils.process_pid();
+        String instanceName = groupId + "@" + JStormUtils.process_pid();
         LOG.error("current instanceName: " + instanceName);
         consumer.setInstanceName(instanceName);
 
         //设置订阅Topic
-        consumer.subscribe(config.getTopic(),config.getSubExpress());
+        for(String topic:config.getTopics()) {
+            consumer.subscribe(topic, config.getSubExpress());
+        }
         //设置pushmessageconsumer 的回调函数
         consumer.registerMessageListener(listenerConcurrently);
 

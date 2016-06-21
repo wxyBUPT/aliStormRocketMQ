@@ -51,7 +51,7 @@ public class RocketSpout implements IRichSpout,
     protected transient AsmHistogram waithHistogram;
     protected transient AsmHistogram processHistogram;
 
-    private final String rocketConsumeTopic;
+    private final List<String> rocketConsumeTopics;
     private final String rocketConsumeGroup;
     private final String nameServer;
     private final String subExp = "*";
@@ -59,15 +59,15 @@ public class RocketSpout implements IRichSpout,
     private int pullBatchSize = 32;
 
     //只提供一种初始化的方式,所有的spout 都可以使用这份代码
-    public RocketSpout(String rocketConsumeTopic,String rocketConsumeGroup,String nameServer){
+    public RocketSpout(List<String> rocketConsumeTopics,String rocketConsumeGroup,String nameServer){
         //初始化rocket Topic 信息
-        this.rocketConsumeTopic = rocketConsumeTopic;
+        this.rocketConsumeTopics = rocketConsumeTopics;
         this.rocketConsumeGroup = rocketConsumeGroup;
         this.nameServer = nameServer;
     }
 
-    public RocketSpout(String rocketConsumeTopic,String rocketConsumeGroup,String nameServer,int batchSize){
-        this.rocketConsumeTopic = rocketConsumeTopic;
+    public RocketSpout(List<String> rocketConsumeTopics,String rocketConsumeGroup,String nameServer,int batchSize){
+        this.rocketConsumeTopics = rocketConsumeTopics;
         this.rocketConsumeGroup = rocketConsumeGroup;
         this.pullBatchSize = batchSize;
         this.nameServer = nameServer;
@@ -142,7 +142,7 @@ public class RocketSpout implements IRichSpout,
 
         initMetricClient(topologyContext);
 
-        rocketClientConfig = new RocketClientConfig(this.rocketConsumeGroup,this.nameServer,this.rocketConsumeTopic
+        rocketClientConfig = new RocketClientConfig(this.rocketConsumeGroup,this.nameServer,this.rocketConsumeTopics
         ,this.subExp);
         rocketClientConfig.setPullBatchSize(this.pullBatchSize);
 

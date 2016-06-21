@@ -12,20 +12,20 @@ import com.alibaba.middleware.race.jstorm.rocket.RocketSpout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by xiyuanbupt on 6/15/16.
  */
 public class RaceTopology {
 
-    private static String TBORDERMESSAGE_SPOUT_ID= "tbOrderMessageSpout";
-    private static String TMORDERMESSAGE_SPOUT_ID = "tmOrderMessageSpout";
-    private static String TM_ORDERMESSAGE_WRITE_BOLT_ID = "tmOrderMessageWriteBolt";
-    private static String TB_ORDERMESSAGE_WRITE_BOLT_ID = "tbOrderMessageWriteBolt";
+    private static String ROCKETSPOUT_ID = "rocketSpoutId";
+    private static String ORDERMESSAGE_WRITE_BOLT_ID = "orderMessageWriteBolt";
     private static String TOPOLOGY_NAME = RaceConfig.JstormTopologyName;
-    private static String PAYMENTMESSAGE_SPOUT_ID = "paymentMessageSpout";
+
     private static String PAYMENTMESSAGE_DESERIALIZE_BOLT_ID
             = "paymentMessageDeserializeBolt";
-    private static String CALCULATERATIO_BOLT_ID = "calculateRatioBolt";
     private static String MINIUTETBTMTRADEBOLT_ID = "miniuteTbTmTradeBolt" ;
     private static String MINIUTEPCMBTRADEBOLT_ID = "miniutePcMbTradeBolt";
     private static Logger LOG = LoggerFactory.getLogger(Topology.class);
@@ -47,39 +47,31 @@ public class RaceTopology {
 
         TopologyBuilder builder = new TopologyBuilder();
 
-        //初始化三个spout
-        RocketSpout tbOrderSpout = new RocketSpout(
-                RaceConfig.MqTaoboaTradeTopic,
-                RaceConfig.MetaConsumerGroup + RaceConfig.MqTaoboaTradeTopic,
-                null);
-        RocketSpout tmOrderSpout = new RocketSpout(
-                RaceConfig.MqTmallTradeTopic,
-                RaceConfig.MetaConsumerGroup + RaceConfig.MqTmallTradeTopic,
-                null);
-
-        RocketSpout paymentSpout = new RocketSpout(
-                RaceConfig.MqPayTopic,
-                RaceConfig.MetaConsumerGroup+RaceConfig.MqPayTopic,
+        //初始化三个bolt
+        List<String> allTopic = new ArrayList<String>();
+        allTopic.add(RaceConfig.MqPayTopic);
+        allTopic.add(RaceConfig.MqTaoboaTradeTopic);
+        allTopic.add(RaceConfig.MqTmallTradeTopic);
+        RocketSpout rocketSpout = new RocketSpout(
+                allTopic,
+                RaceConfig.MetaConsumerGroup,
                 null,1
         );
+        builder.setSpout(ROCKETSPOUT_ID,rocketSpout,1);
 
-        builder.setSpout(TBORDERMESSAGE_SPOUT_ID,tbOrderSpout,1);
-        builder.setSpout(TMORDERMESSAGE_SPOUT_ID,tmOrderSpout,1);
-        builder.setSpout(PAYMENTMESSAGE_SPOUT_ID,paymentSpout,1);
 
-        //初始化两个订单信息同步到Tari 的bolt
+        //初始化两个订单信息同步到 Tair 中的bolt
         OrderWriteBolt tbOrderWriteBolt = new OrderWriteBolt();
         OrderWriteBolt tmOrderWriteBolt = new OrderWriteBolt();
-        builder.setBolt(TM_ORDERMESSAGE_WRITE_BOLT_ID,tmOrderWriteBolt,2).setNumTasks(2)
-                .shuffleGrouping(TMORDERMESSAGE_SPOUT_ID);
-        builder.setBolt(TB_ORDERMESSAGE_WRITE_BOLT_ID,tbOrderWriteBolt,2).setNumTasks(2)
-                .shuffleGrouping(TBORDERMESSAGE_SPOUT_ID);
+        builder.setBolt(ORDERMESSAGE_WRITE_BOLT_ID,tmOrderWriteBolt,2).setNumTasks(2)
+                .shuffleGrouping(ROCKETSPOUT_ID);
 
         //解序列化付款信息,同时查看Tair 来自哪个交易平台
         PayMessageDeserializeBolt payMessageDeserializeBolt =
                 new PayMessageDeserializeBolt();
         builder.setBolt(PAYMENTMESSAGE_DESERIALIZE_BOLT_ID,payMessageDeserializeBolt
-                ,2).setNumTasks(2).shuffleGrouping(PAYMENTMESSAGE_SPOUT_ID);
+                ,1).shuffleGrouping(ROCKETSPOUT_ID);
+
 
         //计算每分钟不同平台交易额比例的bolt
         MiniuteTbTmTradeBolt miniuteTbTmTradeBolt = new MiniuteTbTmTradeBolt();

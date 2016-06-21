@@ -8,6 +8,7 @@ import org.apache.commons.lang.builder.ToStringStyle;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -52,7 +53,7 @@ public class RocketClientConfig implements Serializable {
      */
     private final String nameServer;
 
-    private final String topic;
+    private final List<String> topics;
 
     private final String subExpress;
 
@@ -108,15 +109,16 @@ public class RocketClientConfig implements Serializable {
     private Properties peroperties;
 
     protected RocketClientConfig(String consumerGroup, String nameServer,
-                               String topic, String subExpress) {
+                               List<String> topics, String subExpress) {
         this.consumerGroup = consumerGroup;
         this.nameServer = nameServer;
-        this.topic = topic;
+        this.topics = topics;
         this.subExpress = subExpress;
     }
 
     public RocketClientConfig(Map conf) {
-        topic = (String) conf.get(META_TOPIC);
+        //topic = (String) conf.get(META_TOPIC);
+        topics = null;
         consumerGroup = (String) conf.get(META_CONSUMER_GROUP);
         subExpress = (String) conf.get(META_SUBEXPRESS);
         if (StringUtils.isBlank((String) conf.get(META_NAMESERVER)) == false) {
@@ -241,8 +243,12 @@ public class RocketClientConfig implements Serializable {
         return nameServer;
     }
 
-    public String getTopic() {
-        return topic;
+    public List<String> getTopics() {
+        return topics;
+    }
+
+    public void setTopics(List<String> topics){
+        return;
     }
 
     public String getSubExpress() {
