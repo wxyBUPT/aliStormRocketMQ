@@ -43,27 +43,36 @@ public class RocketConsumerFactory {
         consumer = new DefaultMQPushConsumer(config.getConsumerGroup());
 
         //下面的代码为获得rocketmq nameServer 地址,默认使用如下方式获得,如果不能获得使用下面的方式
-        String ke = "rocketmq.namesrv.addr";
         //通过传递的conf 信息获得Namesrv
         String nameServer = config.getNameServer();
 
+        if(nameServer != null){
+            String raceNameKey = "rocketmq.namesrv.addr";
+            String commonNameKey = "rocketmq.namesrv.domain";
+
+            //如果在配置文件中显示的指定了nameserver 并且在 raceNamekey 中没有显示的指定nameserver,那么设置
+            String value = System.getProperty(raceNameKey);
+            if(value == null){
+                System.setProperty(raceNameKey,nameServer);
+            }
+            value = System.getProperty(commonNameKey);
+            if(value == null){
+                System.setProperty(commonNameKey,nameServer);
+            }
+        }
+
         //在配置中获得NameServer 的地址,因为没有rocketmq 的配置项,所以需要在系统的环境变量中
         //获得NameServer 的地址
-        if(nameServer == null){
-            nameServer = System.getProperty(ke);
-        }
+        //if(nameServer == null){
+        //    nameServer = System.getProperty(ke);
+        //}
 
-        if(nameServer == null){
-            String namekey = "rocketmq.namesrv.domain";
 
-            String value = System.getProperty(namekey);
-            nameServer = value;
-        }
-        if(nameServer == null){
-            throw new Exception(
-                    "Nameserver dosn't get"
-            );
-        }
+        //if(nameServer == null){
+        //    throw new Exception(
+        //            "Nameserver dosn't get"
+        //    );
+        //}
 
         String instanceName = groupId + "@" + JStormUtils.process_pid();
         LOG.error("current instanceName: " + instanceName);

@@ -4,6 +4,7 @@ import backtype.storm.Config;
 import backtype.storm.StormSubmitter;
 import backtype.storm.topology.TopologyBuilder;
 import com.alibaba.middleware.race.RaceConfig;
+import com.alibaba.middleware.race.jstorm.bolt.MiniutePcMbTradeBolt;
 import com.alibaba.middleware.race.jstorm.bolt.MiniuteTbTmTradeBolt;
 import com.alibaba.middleware.race.jstorm.bolt.OrderWriteBolt;
 import com.alibaba.middleware.race.jstorm.bolt.PayMessageDeserializeBolt;
@@ -25,57 +26,13 @@ public class RaceTopology {
     private static String PAYMENTMESSAGE_DESERIALIZE_BOLT_ID
             = "paymentMessageDeserializeBolt";
     private static String CALCULATERATIO_BOLT_ID = "calculateRatioBolt";
-    private static String MINIUTETBTMTRADEBOLT_ID = "minuteTbTmTradeBolt" ;
+    private static String MINIUTETBTMTRADEBOLT_ID = "miniuteTbTmTradeBolt" ;
+    private static String MINIUTEPCMBTRADEBOLT_ID = "miniutePcMbTradeBolt";
     private static Logger LOG = LoggerFactory.getLogger(Topology.class);
-
-    private static final String TOPOLOGYNAME = RaceConfig.JstormTopologyName;
 
     public static void main(String[] args) throws Exception{
 
-        TopologyBuilder builder = new TopologyBuilder();
-
-        //使用环境变量获得rocketmq nameserver 的值
-        String key = "rocketmq.namesrv.addr";
-        String nameServer = System.getProperty(key);
-
-        if (nameServer == null) {
-            nameServer = "10.109.247.29:9876";
-            //throw new Exception("并未指定rocketmq 的环境变量 rocketmq.namesrv.addr 的值");
-        }
-
-        RocketSpout tbOrderSpout = new RocketSpout(RaceConfig.MqTaoboaTradeTopic,
-                RaceConfig.MetaConsumerGroup,
-                nameServer);
-        RocketSpout tmOrderSpout = new RocketSpout(RaceConfig.MqTmallTradeTopic,
-                RaceConfig.MetaConsumerGroup,
-                nameServer);
-
-        RocketSpout paymentSpout = new RocketSpout(
-                RaceConfig.MqPayTopic,
-                RaceConfig.MetaConsumerGroup,
-                nameServer,1
-        );
-
-        OrderWriteBolt tbOrderWriteBolt = new OrderWriteBolt();
-        OrderWriteBolt tmOrderWriteBolt = new OrderWriteBolt();
-        PayMessageDeserializeBolt payMessageDeserializeBolt =
-                new PayMessageDeserializeBolt();
-        //计算每分钟不同平台交易额比例的bolt
-        MiniuteTbTmTradeBolt miniuteTbTmTradeBolt = new MiniuteTbTmTradeBolt();
-
-        builder.setSpout(TBORDERMESSAGE_SPOUT_ID,tbOrderSpout,1);
-        builder.setSpout(TMORDERMESSAGE_SPOUT_ID,tmOrderSpout,1);
-        builder.setSpout(PAYMENTMESSAGE_SPOUT_ID,paymentSpout,1);
-
-        builder.setBolt(TM_ORDERMESSAGE_WRITE_BOLT_ID,tmOrderWriteBolt,1)
-                .shuffleGrouping(TMORDERMESSAGE_SPOUT_ID);
-        builder.setBolt(TB_ORDERMESSAGE_WRITE_BOLT_ID,tbOrderWriteBolt,1)
-                .shuffleGrouping(TBORDERMESSAGE_SPOUT_ID);
-        builder.setBolt(PAYMENTMESSAGE_DESERIALIZE_BOLT_ID,payMessageDeserializeBolt
-                ,1).shuffleGrouping(PAYMENTMESSAGE_SPOUT_ID);
-
-        //builder.setBolt(CALCULATERATIO_BOLT_ID,calculateRatioBolt,1).shuffleGrouping(PAYMENTMESSAGE_DESERIALIZE_BOLT_ID);
-        builder.setBolt(MINIUTETBTMTRADEBOLT_ID,miniuteTbTmTradeBolt,1).shuffleGrouping(PAYMENTMESSAGE_DESERIALIZE_BOLT_ID);
+        TopologyBuilder builder = setupBuilder();
 
         Config config = new Config();
 
@@ -84,6 +41,54 @@ public class RaceTopology {
         }catch (Exception e){
             e.printStackTrace();
         }
+    }
 
+    private static TopologyBuilder setupBuilder() throws Exception{
+
+        TopologyBuilder builder = new TopologyBuilder();
+
+        //初始化三个spout
+        RocketSpout tbOrderSpout = new RocketSpout(
+                RaceConfig.MqTaoboaTradeTopic,
+                RaceConfig.MetaConsumerGroup + RaceConfig.MqTaoboaTradeTopic,
+                null);
+        RocketSpout tmOrderSpout = new RocketSpout(
+                RaceConfig.MqTmallTradeTopic,
+                RaceConfig.MetaConsumerGroup + RaceConfig.MqTmallTradeTopic,
+                null);
+
+        RocketSpout paymentSpout = new RocketSpout(
+                RaceConfig.MqPayTopic,
+                RaceConfig.MetaConsumerGroup+RaceConfig.MqPayTopic,
+                null,1
+        );
+
+        builder.setSpout(TBORDERMESSAGE_SPOUT_ID,tbOrderSpout,1);
+        builder.setSpout(TMORDERMESSAGE_SPOUT_ID,tmOrderSpout,1);
+        builder.setSpout(PAYMENTMESSAGE_SPOUT_ID,paymentSpout,1);
+
+        //初始化两个订单信息同步到Tari 的bolt
+        OrderWriteBolt tbOrderWriteBolt = new OrderWriteBolt();
+        OrderWriteBolt tmOrderWriteBolt = new OrderWriteBolt();
+        builder.setBolt(TM_ORDERMESSAGE_WRITE_BOLT_ID,tmOrderWriteBolt,2).setNumTasks(2)
+                .shuffleGrouping(TMORDERMESSAGE_SPOUT_ID);
+        builder.setBolt(TB_ORDERMESSAGE_WRITE_BOLT_ID,tbOrderWriteBolt,2).setNumTasks(2)
+                .shuffleGrouping(TBORDERMESSAGE_SPOUT_ID);
+
+        //解序列化付款信息,同时查看Tair 来自哪个交易平台
+        PayMessageDeserializeBolt payMessageDeserializeBolt =
+                new PayMessageDeserializeBolt();
+        builder.setBolt(PAYMENTMESSAGE_DESERIALIZE_BOLT_ID,payMessageDeserializeBolt
+                ,2).setNumTasks(2).shuffleGrouping(PAYMENTMESSAGE_SPOUT_ID);
+
+        //计算每分钟不同平台交易额比例的bolt
+        MiniuteTbTmTradeBolt miniuteTbTmTradeBolt = new MiniuteTbTmTradeBolt();
+        builder.setBolt(MINIUTETBTMTRADEBOLT_ID,miniuteTbTmTradeBolt,1).shuffleGrouping(PAYMENTMESSAGE_DESERIALIZE_BOLT_ID);
+
+        //每分钟不同客户端交易额计算的bolt
+        MiniutePcMbTradeBolt miniutePcMbTradeBolt = new MiniutePcMbTradeBolt();
+        builder.setBolt(MINIUTEPCMBTRADEBOLT_ID,miniutePcMbTradeBolt,1).shuffleGrouping(PAYMENTMESSAGE_DESERIALIZE_BOLT_ID);
+
+        return builder;
     }
 }

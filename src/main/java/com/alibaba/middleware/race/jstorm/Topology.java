@@ -48,24 +48,25 @@ public class Topology {
         String nameServer = System.getProperty(key);
 
         if (nameServer == null) {
-            throw new Exception("并未指定rocketmq 的环境变量 rocketmq.namesrv.addr 的值");
+
         }
 
         //初始化三个bolt
         RocketSpout tbOrderSpout = new RocketSpout(
                 RaceConfig.MqTaoboaTradeTopic,
                 RaceConfig.MetaConsumerGroup + RaceConfig.MqTaoboaTradeTopic,
-                nameServer);
+                null);
         RocketSpout tmOrderSpout = new RocketSpout(
                 RaceConfig.MqTmallTradeTopic,
                 RaceConfig.MetaConsumerGroup + RaceConfig.MqTmallTradeTopic,
-                nameServer);
+                null);
 
         RocketSpout paymentSpout = new RocketSpout(
                 RaceConfig.MqPayTopic,
                 RaceConfig.MetaConsumerGroup+RaceConfig.MqPayTopic,
-                nameServer,1
+                null,1
         );
+
 
         builder.setSpout(TBORDERMESSAGE_SPOUT_ID,tbOrderSpout,1);
         builder.setSpout(TMORDERMESSAGE_SPOUT_ID,tmOrderSpout,1);
