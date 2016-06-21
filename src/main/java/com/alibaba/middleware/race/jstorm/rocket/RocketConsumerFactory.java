@@ -26,7 +26,7 @@ public class RocketConsumerFactory {
         List<String> topics = config.getTopics();
         String groupId = config.getConsumerGroup();
 
-        String key = String.join("+",topics) + "@" + groupId;
+        String key = topics + "@" + groupId;
 
         DefaultMQPushConsumer consumer = consumers.get(key);
         if(consumer !=null){
