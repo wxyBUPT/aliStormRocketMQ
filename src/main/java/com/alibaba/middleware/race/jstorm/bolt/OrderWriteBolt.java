@@ -54,11 +54,11 @@ public class OrderWriteBolt implements IRichBolt{
         LOG.debug("Get order message from rocket spout");
         RocketTuple rocketTuple = (RocketTuple)tuple.getValue(0);
         List<MessageExt> messageExtList = rocketTuple.getMsgList();
-        boolean allSendSucceed = true;
         for(MessageExt messageExt:messageExtList){
             //开始Deserialize 付款信息
             if(messageExt.getTopic().equals(RaceConfig.MqPayTopic)) {
-                continue;
+                collector.ack(tuple);
+                break;
             }
             byte[] body = messageExt.getBody();
             if(body.length == 2 && body[0] ==0 && body[1] ==0){
@@ -77,20 +77,13 @@ public class OrderWriteBolt implements IRichBolt{
             //将平台信息发送到 tair
             Boolean sendSuccessed = tairOperator.write(orderId,platform);
             if(sendSuccessed){
-
-            }else {
-                allSendSucceed = false;
+                collector.ack(tuple);
             }
             //一下单纯用于测试是否可以在Tair 中获得相关数据
             //System.out.println("下面的数据是从Tair 中获得的");
             //System.out.println("获得的数据是"+ data);
             //System.out.println("获得的value 的值是" + value);
 
-        }
-        if(allSendSucceed){
-            collector.ack(tuple);
-        }else {
-            collector.fail(tuple);
         }
     }
 }

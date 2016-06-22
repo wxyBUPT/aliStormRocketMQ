@@ -25,13 +25,18 @@ public class ProducerTest {
         );
         int count = 0;
         int failCount = 0;
+        long totalTrades = 0L;
+        long everyMiniutesTotalError = 0L;
         for(String key : keys){
             count ++;
             Float trades = Float.parseFloat(jedis.get(key));
+            totalTrades += trades;
             System.out.println( key + "   真实的交易额为: " + trades);
             DataEntry entry = tairOperator.get(key);
             try {
                 System.out.println("经过storm计算得到的交易额为" + entry.getValue().toString());
+                Float res = Float.parseFloat(entry.getValue().toString());
+                everyMiniutesTotalError += Math.abs(res - trades);
             }catch (Exception e){
                 System.out.println("tair 中没有这个 key 值的 ,key = " + key);
                 failCount ++;
@@ -61,6 +66,8 @@ public class ProducerTest {
         System.out.println("共有: " + failCount + " 条记录没有通过storm得到交易额");
         System.out.println("共有 : " + ratioSucceedCount + "条记录通过storm 计算出了交易比值");
         System.out.println("共有: " + ratioFailCount + " 条交易记录没有通过 storm 计算得到比值");
+        System.out.println("总的交易额为 : " + totalTrades + "元");
+        System.out.println("经过storm 计算得到的误差为: " + everyMiniutesTotalError);
 
         jedis.close();
         tairOperator.close();

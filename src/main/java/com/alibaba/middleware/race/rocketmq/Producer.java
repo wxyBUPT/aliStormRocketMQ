@@ -36,6 +36,9 @@ public class Producer {
     //创建一个hashmap,用于保存分钟数 PC端和mb 端交易额
     static HashMap<Long,Double> pcHashMap = new HashMap<Long, Double>();
     static HashMap<Long,Double> mbHashMap = new HashMap<Long, Double>();
+    static Long tbOrderCount = 0L;
+    static Long tmOrderCount = 0L;
+    static Long payMessageCount = 0L;
 
     public static void main(String[] args)throws MQClientException,InterruptedException{
 
@@ -82,8 +85,12 @@ public class Producer {
                             synchronized (jedis) {
                                 jedis.sadd(RaceConfig.KeySetForRatio, ratioPrefix);
                                 jedis.set(ratioPrefix, ratio.toString());
+                                jedis.set(RaceConfig.TaobaoOrderMessageCount,tbOrderCount.toString());
+                                jedis.set(RaceConfig.TMOrderMessageCount,tmOrderCount.toString());
+                                jedis.set(RaceConfig.PaymentMessageCount,payMessageCount.toString());
                             }
                             System.out.println("分钟 : " + key + "的交易额比例是 : " + ratio);
+                            System.out.println("淘宝订单数为: " + tbOrderCount +"  , 天猫订单数为: " + tmOrderCount + "  ,交易订单数为: " + payMessageCount);
                         }
                     }catch (Exception e){
                         e.printStackTrace();
@@ -102,6 +109,12 @@ public class Producer {
 
                 byte[] body = RaceUtil.writeKryoObject(orderMessage);
 
+                if(platform ==0 ){
+                    tbOrderCount ++;
+                }else {
+                    tmOrderCount ++;
+                }
+
                 Message orderMessageToBroker = new Message(topics[platform],body);
 
                 producer.send(orderMessageToBroker, new SendCallback() {
@@ -119,6 +132,7 @@ public class Producer {
                 PaymentMessage[] paymentMessages = PaymentMessage.createPayMentMsg(orderMessage);
                 double amount = 0;
                 for(final PaymentMessage paymentMessage:paymentMessages){
+                    payMessageCount ++;
                     int retVal = Double.compare(paymentMessage.getPayAmount(),0);
                     if(retVal < 0 ){
                         throw new RuntimeException("price < 0 !!!!!");

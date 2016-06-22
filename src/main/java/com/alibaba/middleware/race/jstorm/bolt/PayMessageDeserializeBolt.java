@@ -58,7 +58,8 @@ public class PayMessageDeserializeBolt implements IRichBolt{
         List<MessageExt> messageExtList = rocketTuple.getMsgList();
         for(MessageExt messageExt:messageExtList){
             if(messageExt.getTopic().equals(RaceConfig.MqTaoboaTradeTopic) || messageExt.getTopic().equals(RaceConfig.MqTmallTradeTopic)){
-                continue;
+                collector.ack(tuple);
+                break;
             }
             //Deserialize 付款信息
             byte[] body = messageExt.getBody();
@@ -103,8 +104,8 @@ public class PayMessageDeserializeBolt implements IRichBolt{
                 StringBuilder sb = new StringBuilder();
                 sb.append("DeserializeLog: get info from Tair fail , execute collector's fail function, orderId is : ").append(orderId).append("query Tair Succeed Count: "
                  + queryTairSucceedCount + "queryTairFailCount:  "+ queryTariFailCount);
-                LOG.info(sb.toString());
-                break;
+                LOG.error(sb.toString());
+                this.collector.fail(tuple);
             }
         }
     }

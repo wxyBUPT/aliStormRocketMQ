@@ -65,9 +65,8 @@ public class Topology {
 
 
         //初始化两个订单信息同步到 Tair 中的bolt
-        OrderWriteBolt tbOrderWriteBolt = new OrderWriteBolt();
-        OrderWriteBolt tmOrderWriteBolt = new OrderWriteBolt();
-        builder.setBolt(ORDERMESSAGE_WRITE_BOLT_ID,tmOrderWriteBolt,2).setNumTasks(2)
+        OrderWriteBolt OrderWriteBolt = new OrderWriteBolt();
+        builder.setBolt(ORDERMESSAGE_WRITE_BOLT_ID,OrderWriteBolt,2).setNumTasks(2)
                 .shuffleGrouping(ROCKETSPOUT_ID);
 
         //解序列化付款信息,同时查看Tair 来自哪个交易平台

@@ -15,7 +15,7 @@ public class RaceConfig implements Serializable{
     //jstorm/rocketMq/tair/kafka/redis 的集群配置信息,这些配置信息在提交代码之前应该修改
     public static String JstormTopologyName = "finalTryhahahah";
 
-    public static String MetaConsumerGroup = "iMakeItYesssssss";
+    public static String MetaConsumerGroup = "iMakeItYessssssssss";
     public static String MqPayTopic = "MiddlewareRaceTestData_Pay_Test1";
     public static String MqTmallTradeTopic = "MiddlewareRaceTestData_TMOrder_Test1";
     public static String MqTaoboaTradeTopic = "MiddlewareRaceTestData_TBOrder_Test1";
@@ -38,4 +38,7 @@ public class RaceConfig implements Serializable{
     //redis 中保存pc mb 每分钟交易额 的所有key 值的key
     public static String KeySetForTmTb= "newRandomKeyNewwwwww";
     public static String KeySetForRatio = "newRandomRatioKeyRRRRRRRRR";
+    public static String TaobaoOrderMessageCount = "tbOrderMessageCount";
+    public static String TMOrderMessageCount = "tmOrderMessageCount";
+    public static String PaymentMessageCount = "paymentMessageCount";
 }

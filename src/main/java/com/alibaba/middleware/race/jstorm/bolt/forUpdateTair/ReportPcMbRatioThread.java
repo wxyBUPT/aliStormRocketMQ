@@ -53,7 +53,6 @@ public class ReportPcMbRatioThread implements Runnable{
                 pcTotalTrades = pcMiniuteTotalTrades.get(currentMiniute);
                 mbTotalTrades = mbMiniuteTotalTrades.get(currentMiniute);
             }catch (Exception e){
-                LOG.error("Wireless Pc data synchronization , Wireless data : " + mbMiniuteTotalTrades.toString() + ", pc data: " + pcMiniuteTotalTrades.toString() + "currentMiniute: " + currentMiniute);
                 continue;
             }
             double ratio;
