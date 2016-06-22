@@ -15,10 +15,10 @@ public class RaceConfig implements Serializable{
     //jstorm/rocketMq/tair/kafka/redis 的集群配置信息,这些配置信息在提交代码之前应该修改
     public static String JstormTopologyName = "finalTryhahahah";
 
-    public static String MetaConsumerGroup = "iMakeItYessssssssss";
-    public static String MqPayTopic = "MiddlewareRaceTestData_Pay_Test1";
-    public static String MqTmallTradeTopic = "MiddlewareRaceTestData_TMOrder_Test1";
-    public static String MqTaoboaTradeTopic = "MiddlewareRaceTestData_TBOrder_Test1";
+    public static String MetaConsumerGroup = "iMakeItYesssssssssssssssss";
+    public static String MqPayTopic = "MiddlewareRaceTestData_Pay_Test2";
+    public static String MqTmallTradeTopic = "MiddlewareRaceTestData_TMOrder_Test2";
+    public static String MqTaoboaTradeTopic = "MiddlewareRaceTestData_TBOrder_Test2";
 
     public static String TairConfigServer = "115.28.93.106:5198";
     public static String TairSalveConfigServer = "xxx";
@@ -36,9 +36,9 @@ public class RaceConfig implements Serializable{
 
     //下面的参数是用于本地测试的
     //redis 中保存pc mb 每分钟交易额 的所有key 值的key
-    public static String KeySetForTmTb= "newRandomKeyNewwwwww";
-    public static String KeySetForRatio = "newRandomRatioKeyRRRRRRRRR";
-    public static String TaobaoOrderMessageCount = "tbOrderMessageCount";
-    public static String TMOrderMessageCount = "tmOrderMessageCount";
-    public static String PaymentMessageCount = "paymentMessageCount";
+    public static String KeySetForTmTb= "newRanddddddomKeyNewwwwww";
+    public static String KeySetForRatio = "newdddRandomRatioKeyRRRRRRRRR";
+    public static String TaobaoOrderMessageCount = "tbOrderMessageCounttt";
+    public static String TMOrderMessageCount = "tmOrdddderMessageCount";
+    public static String PaymentMessageCount = "paymendddtMessageCount";
 }

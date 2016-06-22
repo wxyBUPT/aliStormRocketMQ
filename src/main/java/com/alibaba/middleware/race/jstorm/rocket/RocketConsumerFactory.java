@@ -74,7 +74,7 @@ public class RocketConsumerFactory {
 
         consumer = new DefaultMQPushConsumer(config.getConsumerGroup());
         String instanceName = groupId + "@" + JStormUtils.process_pid();
-        LOG.error("current instanceName: " + instanceName);
+        LOG.info("current instanceName: " + instanceName);
         consumer.setInstanceName(instanceName);
 
         //设置订阅Topic

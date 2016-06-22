@@ -21,7 +21,7 @@ import java.util.concurrent.Semaphore;
  */
 public class Producer {
     private static Random rand = new Random();
-    private static int count = 100000;
+    private static int count = 200000;
 
     /**这是一个消息堆积程序,生成的测试消息模型和比赛的时候的消息模型是一样的
      * 这个程序用来线下测试

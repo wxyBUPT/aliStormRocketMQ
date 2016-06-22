@@ -39,6 +39,7 @@ public class ProducerTest {
                 everyMiniutesTotalError += Math.abs(res - trades);
             }catch (Exception e){
                 System.out.println("tair 中没有这个 key 值的 ,key = " + key);
+                everyMiniutesTotalError += trades - 0;
                 failCount ++;
             }
         }

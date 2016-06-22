@@ -13,7 +13,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by xiyuanbupt on 6/15/16.
@@ -34,10 +36,12 @@ public class RaceTopology {
 
         TopologyBuilder builder = setupBuilder();
 
-        Config config = new Config();
+        //取消ack
+        Map conf = new HashMap();
+        Config.setNumAckers(conf,0);
 
         try {
-            StormSubmitter.submitTopology(TOPOLOGY_NAME,config,builder.createTopology());
+            StormSubmitter.submitTopology(TOPOLOGY_NAME,conf,builder.createTopology());
         }catch (Exception e){
             e.printStackTrace();
         }

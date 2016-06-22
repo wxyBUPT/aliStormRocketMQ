@@ -1,8 +1,8 @@
 package com.alibaba.middleware.race.jstorm;
 
+import backtype.storm.Config;
 import backtype.storm.LocalCluster;
 import backtype.storm.topology.TopologyBuilder;
-import backtype.storm.tuple.Fields;
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.jstorm.bolt.MiniutePcMbTradeBolt;
 import com.alibaba.middleware.race.jstorm.bolt.MiniuteTbTmTradeBolt;
@@ -93,6 +93,7 @@ public class Topology {
         try{
             LocalCluster localCluster = new LocalCluster();
             Map conf = new HashMap();
+            Config.setNumAckers(conf,0);
             localCluster.submitTopology(TOPOLOGY_NAME,conf,builder.createTopology());
             Thread.sleep(2000000);
         }catch (Exception e){
