@@ -32,6 +32,8 @@ public class PayMessageDeserializeBolt implements IRichBolt{
 
     protected OutputCollector collector;
     private TairOperatorImpl tairOperator;
+    private static Long queryTairSucceedCount = 0L;
+    private static Long queryTariFailCount = 0L;
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
@@ -42,6 +44,12 @@ public class PayMessageDeserializeBolt implements IRichBolt{
                 RaceConfig.TairGroup,
                 RaceConfig.TairNamespace
         );
+        LOG.info("PayMessageDeserializeBolt will sleep for 1 seconds, waiting for tair");
+        try{
+            Thread.sleep(1000);
+        }catch (InterruptedException e){
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -75,11 +83,12 @@ public class PayMessageDeserializeBolt implements IRichBolt{
             //System.out.println("收到付款信息,orderId 为 " + orderId);
             DataEntry entry =  tairOperator.get(orderId);
             if(entry != null){
+                queryTairSucceedCount ++;
                 //emit 计算并emit 数据
                 String plat_tm_tb = (String)entry.getValue();
                 //System.out.println("从Tair 查询到数据");
                 StringBuilder sb = new StringBuilder();
-                sb.append("从Tair 中查询到信息,并emit 相关内容,plat_pc_mb : ").append(plat_pc_mb);
+                sb.append("Get info from Tair, will emit , plat_pc_mb: ").append(plat_pc_mb);
                 sb.append("  ,plat_tm_tb:  ").append(plat_tm_tb).append("   , minuteTime").append(minuteTime).append("   , payAmount: ").append(payAmount);
                 LOG.debug(sb.toString());
                 this.collector.emit(new Values(
@@ -90,8 +99,10 @@ public class PayMessageDeserializeBolt implements IRichBolt{
                         ));
                 this.collector.ack(tuple);
             }else {
+                queryTariFailCount++;
                 StringBuilder sb = new StringBuilder();
-                sb.append("没有从Tair 中查询到,执行 collector 的fail操作,orderId 为: ").append(orderId);
+                sb.append("DeserializeLog: get info from Tair fail , execute collector's fail function, orderId is : ").append(orderId).append("query Tair Succeed Count: "
+                 + queryTairSucceedCount + "queryTairFailCount:  "+ queryTariFailCount);
                 LOG.info(sb.toString());
                 break;
             }

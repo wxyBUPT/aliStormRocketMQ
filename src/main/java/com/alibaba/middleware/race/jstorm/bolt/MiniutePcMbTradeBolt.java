@@ -61,7 +61,7 @@ public class MiniutePcMbTradeBolt extends BaseRichBolt{
             this.mbMiniuteTrades.put(minuteTime,mbMiniuteTrade);
             this.collector.emit(new Values(1,minuteTime,mbMiniuteTrade));
         }else {
-            LOG.error("交易平台既不是pc端也不是无线端,交易平台信息是 " + plat_pc_mb);
+            LOG.error("Trade plat form is neither pc nor wireless" + plat_pc_mb);
         }
     }
 

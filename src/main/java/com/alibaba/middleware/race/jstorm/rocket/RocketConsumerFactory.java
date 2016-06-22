@@ -36,7 +36,7 @@ public class RocketConsumerFactory {
         }
         StringBuilder stringBuilder= new StringBuilder();
         stringBuilder.append("Begin to init rocket client");
-        stringBuilder.append(",configuration:").append(config);
+        stringBuilder.append(",rocketClientConfiguration:").append(config);
 
         LOG.info(stringBuilder.toString());
 

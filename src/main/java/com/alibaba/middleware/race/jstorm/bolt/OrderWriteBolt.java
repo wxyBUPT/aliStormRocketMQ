@@ -29,7 +29,6 @@ public class OrderWriteBolt implements IRichBolt{
     private TairOperatorImpl tairOperator;
 
     public void prepare(Map stromConf , TopologyContext context,OutputCollector collector){
-        LOG.warn("创建了一个OrderWrite Bolt");
         this.collector = collector;
         tairOperator = new TairOperatorImpl(RaceConfig.TairConfigServer,
                RaceConfig.TairSalveConfigServer,
@@ -52,7 +51,7 @@ public class OrderWriteBolt implements IRichBolt{
     }
 
     public void execute(Tuple tuple){
-        LOG.debug("从rocketMq spout 中接到订单信息");
+        LOG.debug("Get order message from rocket spout");
         RocketTuple rocketTuple = (RocketTuple)tuple.getValue(0);
         List<MessageExt> messageExtList = rocketTuple.getMsgList();
         boolean allSendSucceed = true;
@@ -83,8 +82,6 @@ public class OrderWriteBolt implements IRichBolt{
                 allSendSucceed = false;
             }
             //一下单纯用于测试是否可以在Tair 中获得相关数据
-            DataEntry data = (DataEntry) tairOperator.get(orderId);
-            String value = (String)data.getValue();
             //System.out.println("下面的数据是从Tair 中获得的");
             //System.out.println("获得的数据是"+ data);
             //System.out.println("获得的value 的值是" + value);

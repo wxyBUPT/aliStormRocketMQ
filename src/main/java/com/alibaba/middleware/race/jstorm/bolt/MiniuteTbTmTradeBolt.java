@@ -64,7 +64,7 @@ public class MiniuteTbTmTradeBolt extends BaseRichBolt {
             this.tmMiniuteTrades.put(minuteTime,tmMiniuteTrade);
             this.collector.emit(new Values(RaceConfig.prex_tmall,minuteTime,tmMiniuteTrade));
         }else {
-            LOG.error("收到既不是淘宝平台也不是天猫平台的订单");
+            LOG.error("MiniuteTbTmTradeBoltLog: platform neither tm nor tb");
         }
         //为了调试写 error日志
 

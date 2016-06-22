@@ -37,22 +37,31 @@ public class ProducerTest {
                 failCount ++;
             }
         }
-        System.out.println("总共有 " + count  + " 条记录");
-        System.out.println("共有: " + failCount + " 条记录没有得到交易额");
+
 
 
         //下面测试 ratio 是否准确
         keys = jedis.smembers(RaceConfig.KeySetForRatio);
+        System.out.println("当前Ratio 的keySet为: " + keys.toString());
+        int ratioSucceedCount = 0;
+        int ratioFailCount = 0;
         for(String key : keys){
             Float ratio = Float.parseFloat(jedis.get(key));
             System.out.println(key + " 真正的无线端比pc端的交易比例为 : " + ratio);
             DataEntry entry = tairOperator.get(key);
             try {
+                ratioSucceedCount ++;
                 System.out.println("经过storm 计算得到的交易壁纸为 " + entry.getValue().toString());
             }catch (Exception e){
+                ratioFailCount ++;
                 System.out.println("storm 还没有算出相关的值");
             }
         }
+        System.out.println("总共有 " + count  + " 条记录");
+        System.out.println("共有: " + failCount + " 条记录没有通过storm得到交易额");
+        System.out.println("共有 : " + ratioSucceedCount + "条记录通过storm 计算出了交易比值");
+        System.out.println("共有: " + ratioFailCount + " 条交易记录没有通过 storm 计算得到比值");
+
         jedis.close();
         tairOperator.close();
         System.out.println("成功关闭两个链接");

@@ -18,6 +18,10 @@ public class TestTair2 {
         );
         entry  = tairOperator.get("foo");
         System.out.println(entry.toString());
+        System.out.println("这已经是在获得foo 参数之后");
+        entry = tairOperator.get("ttt");
+        System.out.println(entry.toString());
+
         tairOperator.write("foo","bar1098");
         entry = tairOperator.get("foo");
         System.out.println(entry.toString());

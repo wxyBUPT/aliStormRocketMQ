@@ -41,8 +41,8 @@ public class ReportTbTmTradeThread implements Runnable {
 
     private void initTairConnection(){
         StringBuilder sb = new StringBuilder();
-        sb.append("线程").append(Thread.currentThread().getName());
-        sb.append("初始化Tair 客户端");
+        sb.append("Thread: ").append(Thread.currentThread().getName());
+        sb.append("initialize Tari client : ");
         LOG.info(sb.toString());
         tairOperator = new TairOperatorImpl(
                 RaceConfig.TairConfigServer,
@@ -54,8 +54,9 @@ public class ReportTbTmTradeThread implements Runnable {
 
     private boolean report(){
         StringBuilder sb = new StringBuilder();
-        sb.append("执行一次数据同步工作,同步的平台是").append(prefix);
-        sb.append("当前该平台每分钟交易额为").append(hashMap.toString());
+        sb.append("TmTbTradeSynchronization: ");
+        sb.append(" current plat form : ").append(prefix);
+        sb.append("current plat trades per miniute").append(hashMap);
         LOG.info(sb.toString());
         for(Map.Entry<Long,Double> entry : hashMap.entrySet()){
             String key = this.prefix + entry.getKey();

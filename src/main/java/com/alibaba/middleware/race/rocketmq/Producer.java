@@ -21,11 +21,21 @@ import java.util.concurrent.Semaphore;
  */
 public class Producer {
     private static Random rand = new Random();
-    private static int count = 1000;
+    private static int count = 100000;
 
     /**这是一个消息堆积程序,生成的测试消息模型和比赛的时候的消息模型是一样的
      * 这个程序用来线下测试
      */
+    static final Jedis jedis = new Jedis("10.109.247.29");
+
+    static final String[] topics = new String[]{RaceConfig.MqTaoboaTradeTopic,RaceConfig.MqTmallTradeTopic};
+    static final String[] prefix = new String[]{RaceConfig.prex_taobao,RaceConfig.prex_tmall};
+    static final Semaphore semaphore = new Semaphore(0);
+
+    static HashSet<Long> forCountMiniute = new HashSet<Long>();
+    //创建一个hashmap,用于保存分钟数 PC端和mb 端交易额
+    static HashMap<Long,Double> pcHashMap = new HashMap<Long, Double>();
+    static HashMap<Long,Double> mbHashMap = new HashMap<Long, Double>();
 
     public static void main(String[] args)throws MQClientException,InterruptedException{
 
@@ -40,16 +50,48 @@ public class Producer {
         producer.start();
 
         //用于测试目的创建了Redis 连接.Redis 中保存了最后的结果数据,以及拥有的所有 key值
-        Jedis jedis = new Jedis("10.109.247.29");
 
-        final String[] topics = new String[]{RaceConfig.MqTaoboaTradeTopic,RaceConfig.MqTmallTradeTopic};
-        final String[] prefix = new String[]{RaceConfig.prex_taobao,RaceConfig.prex_tmall};
-        final Semaphore semaphore = new Semaphore(0);
 
-        HashSet<Long> forCountMiniute = new HashSet<Long>();
-        //创建一个hashmap,用于保存分钟数 PC端和mb 端交易额
-        HashMap<Long,Double> pcHashMap = new HashMap<Long, Double>();
-        HashMap<Long,Double> mbHashMap = new HashMap<Long, Double>();
+        new Thread(new Runnable() {
+
+            //HashSet<Long> forCountMiniute ;
+            //HashMap<Long,Double> pcHashMap;
+            //HashMap<Long,Double> mbHashMap;
+
+            //public Runnable(HashMap<Long,Double> pcHashMap,HashMap<Long,Double> mbHashMap){
+                //this.pcHashMap = pcHashMap;
+                //this.mbHashMap = mbHashMap;
+            //}
+
+            @Override
+            public void run() {
+                while(true){
+                    try{
+                        Thread.sleep(2000);
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+                    //下面计算mb/pc 交易额数据
+                    HashMap<Long,Double> pcMiniuteTrades = miniuteTrades2miniuteTotalTradesmap(pcHashMap);
+                    HashMap<Long,Double> mbMiniuteTrades = miniuteTrades2miniuteTotalTradesmap(mbHashMap);
+                    try{
+                        for(Map.Entry<Long,Double> entry : pcMiniuteTrades.entrySet()){
+                            Long key = entry.getKey();
+                            Double ratio = mbMiniuteTrades.get(key)/entry.getValue();
+                            String ratioPrefix = RaceConfig.prex_ratio + key;
+                            synchronized (jedis) {
+                                jedis.sadd(RaceConfig.KeySetForRatio, ratioPrefix);
+                                jedis.set(ratioPrefix, ratio.toString());
+                            }
+                            System.out.println("分钟 : " + key + "的交易额比例是 : " + ratio);
+                        }
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+                    System.out.println("一共产生了 : " + forCountMiniute.size() + "分钟的数据");
+                }
+            }
+        }).start();
 
 
         for(int i = 0;i<count;i++){
@@ -85,8 +127,10 @@ public class Producer {
                     Long time = paymentMessage.getCreateTime()/1000;
                     forCountMiniute.add(time);
                     String key = prefix[platform] + time;
-                    jedis.sadd(RaceConfig.KeySetForTmTb,key);
-                    jedis.incrByFloat(key,paymentMessage.getPayAmount());
+                    synchronized (jedis) {
+                        jedis.sadd(RaceConfig.KeySetForTmTb, key);
+                        jedis.incrByFloat(key, paymentMessage.getPayAmount());
+                    }
 
                     short plat = paymentMessage.getPayPlatform();
                     if(plat == 0 ){
@@ -130,7 +174,6 @@ public class Producer {
                 }
             }catch (Exception e ){
                 e.printStackTrace();
-                Thread.sleep(1000);
             }
         }
 
@@ -150,22 +193,7 @@ public class Producer {
         }
         producer.shutdown();
 
-        //下面计算mb/pc 交易额数据
-        HashMap<Long,Double> pcMiniuteTrades = miniuteTrades2miniuteTotalTradesmap(pcHashMap);
-        HashMap<Long,Double> mbMiniuteTrades = miniuteTrades2miniuteTotalTradesmap(mbHashMap);
-        try{
-            for(Map.Entry<Long,Double> entry : pcMiniuteTrades.entrySet()){
-                Long key = entry.getKey();
-                Double ratio = mbMiniuteTrades.get(key)/entry.getValue();
-                String ratioPrefix = RaceConfig.prex_ratio + key;
-                jedis.sadd(RaceConfig.KeySetForRatio,ratioPrefix);
-                jedis.set(ratioPrefix,ratio.toString());
-                System.out.println("分钟 : " + key + "的交易额比例是 : " + ratio);
-            }
-        }catch (Exception e){
 
-        }
-        System.out.println("一共产生了 : " + forCountMiniute.size() + "分钟的数据");
     }
 
     private static HashMap<Long,Double> miniuteTrades2miniuteTotalTradesmap(HashMap<Long,Double> from){

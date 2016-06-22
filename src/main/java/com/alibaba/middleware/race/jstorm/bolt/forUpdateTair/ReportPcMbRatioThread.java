@@ -22,8 +22,8 @@ public class ReportPcMbRatioThread implements Runnable{
 
     public ReportPcMbRatioThread(ConcurrentHashMap<Long,Double> pcMiniuteTrades,ConcurrentHashMap<Long,Double> mbMiniuteTrades){
         StringBuilder sb = new StringBuilder();
-        sb.append("线程: ").append(Thread.currentThread().getName());
-        sb.append("  初始化 Tair 客户端");
+        sb.append("Thread : ").append(Thread.currentThread().getName());
+        sb.append("  start initialize Tair client");
         LOG.info(sb.toString());
         tairOperator = new TairOperatorImpl(
                 RaceConfig.TairConfigServer,
@@ -31,7 +31,7 @@ public class ReportPcMbRatioThread implements Runnable{
                 RaceConfig.TairGroup,
                 RaceConfig.TairNamespace
         );
-        LOG.info("创建Tair 链接成功");
+        LOG.info("Create Tair client connection succeed!");
         this.pcMiniuteTrades = pcMiniuteTrades;
         this.mbMiniuteTrades = mbMiniuteTrades;
     }
@@ -40,8 +40,9 @@ public class ReportPcMbRatioThread implements Runnable{
         HashMap<Long,Double> pcMiniuteTotalTrades = miniuteTrades2miniuteTotalTradesmap(this.pcMiniuteTrades);
         HashMap<Long,Double> mbMiniuteTotalTrades = miniuteTrades2miniuteTotalTradesmap(this.mbMiniuteTrades);
         StringBuilder sb = new StringBuilder();
-        sb.append("无线端分钟数的总交易额为 " ).append(mbMiniuteTotalTrades);
-        sb.append("pc 端分钟数的总交易额为").append(pcMiniuteTotalTrades);
+        sb.append("WirelessPcTotalTradesBeforeCalculateRatio: ");
+        sb.append("Wireless client total trades every miniutes is :  " ).append(mbMiniuteTotalTrades);
+        sb.append("pc client total trades every miniutes is :  ").append(pcMiniuteTotalTrades);
         LOG.info(sb.toString());
         long minMiniute,maxMiniute;
         minMiniute = getMapMinKey(pcMiniuteTotalTrades);
@@ -52,7 +53,7 @@ public class ReportPcMbRatioThread implements Runnable{
                 pcTotalTrades = pcMiniuteTotalTrades.get(currentMiniute);
                 mbTotalTrades = mbMiniuteTotalTrades.get(currentMiniute);
             }catch (Exception e){
-                LOG.error("无线端和 pc端 数据不同步" + "无线端的数据是: "+ mbMiniuteTotalTrades.toString() + "pc 端的数据是: " + pcMiniuteTotalTrades.toString());
+                LOG.error("Wireless Pc data synchronization , Wireless data : " + mbMiniuteTotalTrades.toString() + ", pc data: " + pcMiniuteTotalTrades.toString() + "currentMiniute: " + currentMiniute);
                 continue;
             }
             double ratio;
@@ -127,15 +128,12 @@ public class ReportPcMbRatioThread implements Runnable{
             try {
                 Thread.sleep(RaceConfig.ReportRatioToTairInterval);
             }catch (Exception e){
-                LOG.error("Thread sleep 发生了一些异常");
+                LOG.error("Some Exception happend while thread sleep");
             }
             if(pcMiniuteTrades.size() == 0 || mbMiniuteTrades.size() ==0){
-                LOG.info("当前的pc 和 mb 的交易额是空的,不执行数据同步操作");
+                LOG.info("Wireless and Pc trades is empty, so will not perform data synchronization");
                 continue;
             }
-            StringBuilder sb = new StringBuilder();
-            sb.append("执行一次pc 端和无线端的总交易额比例同步,当前pc 每分钟交易额为: " + pcMiniuteTrades.toString() + "当前无线端每分钟交易额为 " + mbMiniuteTrades.toString());
-            LOG.info(sb.toString());
             calculateRatioAndReport();
         }
     }
