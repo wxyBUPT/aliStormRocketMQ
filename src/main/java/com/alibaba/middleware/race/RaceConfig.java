@@ -16,9 +16,9 @@ public class RaceConfig implements Serializable{
     public static String JstormTopologyName = "finalTryfinal";
 
     public static String MetaConsumerGroup = "iMakeItYesssssssssssssssssss";
-    public static String MqPayTopic = "MiddlewareRaceTestData_Pay_Test2";
-    public static String MqTmallTradeTopic = "MiddlewareRaceTestData_TMOrder_Test2";
-    public static String MqTaoboaTradeTopic = "MiddlewareRaceTestData_TBOrder_Test2";
+    public static String MqPayTopic = "MiddlewareRaceTestData_Pay";
+    public static String MqTmallTradeTopic = "MiddlewareRaceTestData_TMOrder";
+    public static String MqTaoboaTradeTopic = "MiddlewareRaceTestData_TBOrder";
 
     public static String TairConfigServer = "115.28.93.106:5198";
     public static String TairSalveConfigServer = "xxx";
