@@ -8,9 +8,9 @@ import java.io.Serializable;
 public class RaceConfig implements Serializable{
 
     //tair key 的前缀
-    public static String prex_tmall = "platformTmall_";
-    public static String prex_taobao = "platformTaobao_";
-    public static String prex_ratio = "ratio_";
+    public static String prex_tmall = "platformTmall_41084gxo4o_";
+    public static String prex_taobao = "platformTaobao_41084gxo4o_";
+    public static String prex_ratio = "ratio_41084gxo4o_";
 
     //jstorm/rocketMq/tair/kafka/redis 的集群配置信息,这些配置信息在提交代码之前应该修改
     public static String JstormTopologyName = "41084gxo4o";
