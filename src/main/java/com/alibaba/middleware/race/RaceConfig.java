@@ -13,17 +13,20 @@ public class RaceConfig implements Serializable{
     public static String prex_ratio = "ratio_";
 
     //jstorm/rocketMq/tair/kafka/redis 的集群配置信息,这些配置信息在提交代码之前应该修改
-    public static String JstormTopologyName = "finalTryfinal";
+    public static String JstormTopologyName = "41084gxo4o";
 
-    public static String MetaConsumerGroup = "iMakeItYesssssssssssssssssss";
+    public static String MetaConsumerGroup = "41084gxo4o";
     public static String MqPayTopic = "MiddlewareRaceTestData_Pay";
     public static String MqTmallTradeTopic = "MiddlewareRaceTestData_TMOrder";
     public static String MqTaoboaTradeTopic = "MiddlewareRaceTestData_TBOrder";
 
-    public static String TairConfigServer = "115.28.93.106:5198";
-    public static String TairSalveConfigServer = "xxx";
-    public static String TairGroup = "group_1";
-    public static Integer TairNamespace = 0;
+    //public static String TairConfigServer = "115.28.93.106:5198";
+    public static String TairConfigServer = "10.101.72.127:5198";
+    //public static String TairSalveConfigServer = "xxx";
+    public static String TairSalveConfigServer = "10.101.72.128:5198";
+    //public static String TairGroup = "group_1";
+    public static String TairGroup = "group_tianchi";
+    public static Integer TairNamespace = 25395;
 
     //测试环境使用配置
     public static boolean isConsumerFromFirstOffset = false;
