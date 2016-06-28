@@ -60,7 +60,12 @@ public class ReportTbTmTradeThread implements Runnable {
                Thread.sleep(5);
             }catch (Exception e){
             }
-            tairOperator.write(key, value);
+            try {
+                tairOperator.write(key, value);
+            }catch (Exception e){
+                LOG.error("Key: " + key + " has not been writen to Tair , value is : " + value );
+                LOG.trace(e.getStackTrace());
+            }
         }
         return true;
     }
