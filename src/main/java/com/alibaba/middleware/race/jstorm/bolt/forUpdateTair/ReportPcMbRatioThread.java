@@ -56,6 +56,12 @@ public class ReportPcMbRatioThread implements Runnable{
             }catch (Exception e){
                 continue;
             }
+            //为了不让Tair客户端负载压力过大,暂停执行
+            try {
+                Thread.sleep(5);
+            }catch (Exception e){
+
+            }
             tairOperator.write(RaceConfig.prex_ratio + currentMiniute,ratio);
         }
     }
