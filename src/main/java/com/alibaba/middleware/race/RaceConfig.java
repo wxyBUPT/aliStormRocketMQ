@@ -34,9 +34,9 @@ public class RaceConfig implements Serializable{
 
     //ReportToTairThread 多久会同步程序中的内存数据到 Tair,每次同步内存数据会被清除
     //数据单位是毫秒,当前是每半分钟同步一次数据
-    public static Integer ReportRatioToTairInterval = 10000;
+    public static Integer ReportRatioToTairInterval = 30000;
     //tb,tm Trade 同步到 Tair 的时间间隔.
-    public static Integer ReportTbTmTradeInterval = 15000;
+    public static Integer ReportTbTmTradeInterval = 25000;
 
     //下面的参数是用于本地测试的
     //redis 中保存pc mb 每分钟交易额 的所有key 值的key

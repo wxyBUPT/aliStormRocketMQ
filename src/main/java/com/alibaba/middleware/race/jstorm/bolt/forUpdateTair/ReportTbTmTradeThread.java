@@ -56,7 +56,7 @@ public class ReportTbTmTradeThread implements Runnable {
         for(Map.Entry<Long,Double> entry : hashMap.entrySet()){
             String key = this.prefix + entry.getKey();
             Double value = (double)Math.round(entry.getValue()*100)/100;
-            tairOperator.write(key,value);
+            tairOperator.write(key, value);
         }
         return true;
     }
