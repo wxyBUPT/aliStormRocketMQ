@@ -22,14 +22,15 @@ public class RaceConfig implements Serializable{
 
     //public static String TairConfigServer = "115.28.93.106:5198";
     public static String TairConfigServer = "10.101.72.127:5198";
-    //public static String TairSalveConfigServer = "xxx";
+    //public static String TairSalveConfigServer =null;
     public static String TairSalveConfigServer = "10.101.72.128:5198";
     //public static String TairGroup = "group_1";
     public static String TairGroup = "group_tianchi";
     public static Integer TairNamespace = 25395;
+    //public static Integer TairNamespace = 0;
 
     //测试环境使用配置
-    public static boolean isConsumerFromFirstOffset = false;
+    public static boolean isConsumerFromFirstOffset = true;
 
     //ReportToTairThread 多久会同步程序中的内存数据到 Tair,每次同步内存数据会被清除
     //数据单位是毫秒,当前是每半分钟同步一次数据
@@ -39,9 +40,9 @@ public class RaceConfig implements Serializable{
 
     //下面的参数是用于本地测试的
     //redis 中保存pc mb 每分钟交易额 的所有key 值的key
-    public static String KeySetForTmTb= "newRandsssdddddomKeyNewwwwww";
-    public static String KeySetForRatio = "newdddRssssandomRatioKeyRRRRRRRRR";
-    public static String TaobaoOrderMessageCount = "tsssbOrderMessageCounttt";
-    public static String TMOrderMessageCount = "tmOrdddsssderMessageCount";
-    public static String PaymentMessageCount = "paymendddssstMessageCount";
+    public static String KeySetForTmTb= "newRandsssdddddodddmKeyNewwwwww";
+    public static String KeySetForRatio = "newdddRssssandomdddRatioKeyRRRRRRRRR";
+    public static String TaobaoOrderMessageCount = "tsssbOrdedddrMessageCounttt";
+    public static String TMOrderMessageCount = "tmOrdddsssderMedddssageCount";
+    public static String PaymentMessageCount = "paymendddssstMessdddageCount";
 }

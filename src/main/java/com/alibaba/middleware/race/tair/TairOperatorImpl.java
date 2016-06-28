@@ -38,9 +38,13 @@ public class TairOperatorImpl {
     ){
         List<String> confServer = new ArrayList<String>();
         confServer.add(masterConfigServer);
+        if(slaveConfigServer != null){
+            confServer.add(slaveConfigServer);
+        }
 
         tairManager = new DefaultTairManager();
         tairManager.setConfigServerList(confServer);
+
 
         tairManager.setGroupName(groupName);
         tairManager.init();
