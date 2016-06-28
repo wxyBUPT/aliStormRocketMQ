@@ -138,7 +138,7 @@ public class Producer {
                         throw new RuntimeException("price < 0 !!!!!");
                     }
                     //用于测试目的,将结果同步到 redis中
-                    Long time = paymentMessage.getCreateTime()/1000;
+                    Long time = (paymentMessage.getCreateTime()/1000/60)*60;
                     forCountMiniute.add(time);
                     String key = prefix[platform] + time;
                     synchronized (jedis) {

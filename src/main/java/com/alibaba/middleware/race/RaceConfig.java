@@ -40,9 +40,9 @@ public class RaceConfig implements Serializable{
 
     //下面的参数是用于本地测试的
     //redis 中保存pc mb 每分钟交易额 的所有key 值的key
-    public static String KeySetForTmTb= "newRandsssdddddodddmKeyNewwwwww";
-    public static String KeySetForRatio = "newdddRssssandomdddRatioKeyRRRRRRRRR";
-    public static String TaobaoOrderMessageCount = "tsssbOrdedddrMessageCounttt";
-    public static String TMOrderMessageCount = "tmOrdddsssderMedddssageCount";
-    public static String PaymentMessageCount = "paymendddssstMessdddageCount";
+    public static String KeySetForTmTb= "newRandsssdddddodddiiiiiKeyNewwwwww";
+    public static String KeySetForRatio = "newdddRssssandomdddRiiiiijatioKeyRRRRRRRRR";
+    public static String TaobaoOrderMessageCount = "tsssbOrdedddrMesiiisageCounttt";
+    public static String TMOrderMessageCount = "tmOrdddsssderMedddssagiiieCount";
+    public static String PaymentMessageCount = "paymendddssstMessdddageCiiiount";
 }

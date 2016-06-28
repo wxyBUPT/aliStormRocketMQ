@@ -71,7 +71,14 @@ public class OrderWriteBolt implements IRichBolt{
             // totalPrice=63129.08}
             long orderId = orderMessage.getOrderId();
             String salerId = orderMessage.getSalerId();
-            String platform= salerId.split("_")[0];
+            String platform ;
+            if(messageExt.getTopic().equals(RaceConfig.MqTaoboaTradeTopic)){
+                platform = "tb";
+            }else if(messageExt.getTopic().equals(RaceConfig.MqTmallTradeTopic)){
+                platform = "tm";
+            }else {
+                platform = "";
+            }
             //将平台信息发送到 tair
             Boolean sendSuccessed = tairOperator.write(orderId,platform);
             if(sendSuccessed){
