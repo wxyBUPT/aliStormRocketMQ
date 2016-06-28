@@ -25,12 +25,7 @@ public class ReportPcMbRatioThread implements Runnable{
         sb.append("Thread : ").append(Thread.currentThread().getName());
         sb.append("  start initialize Tair client");
         LOG.info(sb.toString());
-        tairOperator = new TairOperatorImpl(
-                RaceConfig.TairConfigServer,
-                RaceConfig.TairSalveConfigServer,
-                RaceConfig.TairGroup,
-                RaceConfig.TairNamespace
-        );
+        tairOperator = TairOperatorImpl.getInstance();
         LOG.info("Create Tair client connection succeed!");
         this.pcMiniuteTrades = pcMiniuteTrades;
         this.mbMiniuteTrades = mbMiniuteTrades;

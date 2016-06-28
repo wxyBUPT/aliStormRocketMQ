@@ -20,12 +20,7 @@ public class TestTair {
     private TairOperatorImpl tairOperator = null;
 
     private void initTairConnection(){
-        tairOperator = new TairOperatorImpl(
-                RaceConfig.TairConfigServer,
-                RaceConfig.TairSalveConfigServer,
-                RaceConfig.TairGroup,
-                RaceConfig.TairNamespace
-        );
+        tairOperator = TairOperatorImpl.getInstance();
         return ;
     }
     public TestTair(){

@@ -27,10 +27,22 @@ public class TairOperatorImpl {
         rootLogger.setLevel(Level.toLevel("info"));
     }
 
+    //添加单例模式
+    private static TairOperatorImpl instance;
+
+
     private DefaultTairManager tairManager ;
+
     private int namespace;
 
-    public TairOperatorImpl(
+    public static synchronized TairOperatorImpl getInstance(){
+        if(instance == null){
+            instance = new TairOperatorImpl(RaceConfig.TairConfigServer,RaceConfig.TairSalveConfigServer,RaceConfig.TairGroup,RaceConfig.TairNamespace);
+        }
+        return instance;
+    }
+
+    private TairOperatorImpl(
             String masterConfigServer,
             String slaveConfigServer,
             String groupName,

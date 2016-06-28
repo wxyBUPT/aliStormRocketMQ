@@ -49,12 +49,7 @@ public class ReportToTairThread implements Runnable{
         sb.append("线程").append(Thread.currentThread().getName());
         sb.append("初始化Tair 客户端");
         LOG.info(sb.toString());
-        tairOperator = new TairOperatorImpl(
-                RaceConfig.TairConfigServer,
-                RaceConfig.TairSalveConfigServer,
-                RaceConfig.TairGroup,
-                RaceConfig.TairNamespace
-        );
+        tairOperator = TairOperatorImpl.getInstance();
         return ;
     }
 

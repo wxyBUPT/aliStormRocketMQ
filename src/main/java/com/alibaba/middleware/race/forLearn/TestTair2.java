@@ -10,12 +10,7 @@ import com.taobao.tair.DataEntry;
 public class TestTair2 {
     public static void main(String[] args){
         DataEntry entry = null;
-        TairOperatorImpl tairOperator = new TairOperatorImpl(
-                RaceConfig.TairConfigServer,
-                RaceConfig.TairSalveConfigServer,
-                RaceConfig.TairGroup,
-                RaceConfig.TairNamespace
-        );
+        TairOperatorImpl tairOperator = TairOperatorImpl.getInstance();
         entry  = tairOperator.get("foo");
         System.out.println(entry.toString());
         System.out.println("这已经是在获得foo 参数之后");

@@ -16,12 +16,5 @@ public class TestLogger {
         System.setProperty("org.apache.commons.logging.Log",
                 "org.apache.commons.logging.impl.NoOpLog");
 
-        TairOperatorImpl tairOperator = new TairOperatorImpl(
-                RaceConfig.TairConfigServer,
-                RaceConfig.TairSalveConfigServer,
-                RaceConfig.TairGroup,
-                RaceConfig.TairNamespace
-        );
-
     }
 }

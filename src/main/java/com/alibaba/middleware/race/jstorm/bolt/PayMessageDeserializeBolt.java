@@ -38,12 +38,7 @@ public class PayMessageDeserializeBolt implements IRichBolt{
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         this.collector = outputCollector;
-        tairOperator = new TairOperatorImpl(
-                RaceConfig.TairConfigServer,
-                RaceConfig.TairSalveConfigServer,
-                RaceConfig.TairGroup,
-                RaceConfig.TairNamespace
-        );
+        tairOperator = TairOperatorImpl.getInstance();
         LOG.info("PayMessageDeserializeBolt will sleep for 1 seconds, waiting for tair");
         try{
             Thread.sleep(1000);

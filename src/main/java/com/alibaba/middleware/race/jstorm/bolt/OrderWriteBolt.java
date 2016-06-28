@@ -30,9 +30,7 @@ public class OrderWriteBolt implements IRichBolt{
 
     public void prepare(Map stromConf , TopologyContext context,OutputCollector collector){
         this.collector = collector;
-        tairOperator = new TairOperatorImpl(RaceConfig.TairConfigServer,
-               RaceConfig.TairSalveConfigServer,
-               RaceConfig.TairGroup,RaceConfig.TairNamespace);
+        tairOperator = TairOperatorImpl.getInstance();
     }
 
     @Override

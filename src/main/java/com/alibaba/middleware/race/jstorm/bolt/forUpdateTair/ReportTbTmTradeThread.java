@@ -44,12 +44,7 @@ public class ReportTbTmTradeThread implements Runnable {
         sb.append("Thread: ").append(Thread.currentThread().getName());
         sb.append("initialize Tari client : ");
         LOG.info(sb.toString());
-        tairOperator = new TairOperatorImpl(
-                RaceConfig.TairConfigServer,
-                RaceConfig.TairSalveConfigServer,
-                RaceConfig.TairGroup,
-                RaceConfig.TairNamespace
-        );
+        tairOperator = TairOperatorImpl.getInstance();
     }
 
     private boolean report(){

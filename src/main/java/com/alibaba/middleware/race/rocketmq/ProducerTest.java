@@ -17,12 +17,7 @@ public class ProducerTest {
         System.out.println("Connection to server sucessfully ");
         Set<String> keys = jedis.smembers(RaceConfig.KeySetForTmTb);
 
-        TairOperatorImpl tairOperator = new TairOperatorImpl(
-                RaceConfig.TairConfigServer,
-                RaceConfig.TairSalveConfigServer,
-                RaceConfig.TairGroup,
-                RaceConfig.TairNamespace
-        );
+        TairOperatorImpl tairOperator = TairOperatorImpl.getInstance();
         int count = 0;
         int failCount = 0;
         long totalTrades = 0L;
