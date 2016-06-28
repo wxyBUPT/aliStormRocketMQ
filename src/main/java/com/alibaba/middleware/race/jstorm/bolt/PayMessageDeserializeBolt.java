@@ -71,7 +71,7 @@ public class PayMessageDeserializeBolt implements IRichBolt{
             // createTime=1465113548255}
             long createTime = paymentMessage.getCreateTime();
             short plat_pc_mb = paymentMessage.getPayPlatform();
-            long minuteTime = createTime / 1000;
+            long minuteTime = (createTime / 1000/60)*60;
             long orderId = paymentMessage.getOrderId();
             double payAmount = paymentMessage.getPayAmount();
             //根据订单id 在Tair 中发查询平台信息,因为一个 tuple 被为只有一个payMessage,
