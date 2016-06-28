@@ -48,14 +48,16 @@ public class TairOperatorImpl {
             String groupName,
             int namespace
     ){
-        List<String> confServer = new ArrayList<String>();
+        List confServer = new ArrayList();
         confServer.add(masterConfigServer);
         if(slaveConfigServer != null){
             confServer.add(slaveConfigServer);
         }
+        //设置超时时间
 
         tairManager = new DefaultTairManager();
         tairManager.setConfigServerList(confServer);
+        tairManager.setTimeout(3000);
 
 
         tairManager.setGroupName(groupName);
@@ -84,7 +86,13 @@ public class TairOperatorImpl {
     }
 
     public boolean remove(Serializable key){
-        return false;
+        ResultCode rc = tairManager.delete(namespace,key);
+        if(rc.isSuccess()){
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 
     public boolean close(){

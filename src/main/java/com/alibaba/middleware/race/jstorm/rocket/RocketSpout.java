@@ -201,7 +201,7 @@ public class RocketSpout implements IRichSpout,
 
     public void sendTuple(RocketTuple rocketTuple){
         rocketTuple.updateEmitMs();
-        collector.emit(new Values(rocketTuple),rocketTuple.getCreateMs());
+        collector.emit(new Values(rocketTuple));
     }
 
     @Override
