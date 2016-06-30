@@ -11,3 +11,5 @@ do
         echo "$3/$dir is a file"
     fi
 done
+
+
