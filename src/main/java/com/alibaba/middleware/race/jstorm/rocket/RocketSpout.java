@@ -230,6 +230,8 @@ public class RocketSpout implements IRichSpout,
 
     @Override
     public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> list, ConsumeConcurrentlyContext consumeConcurrentlyContext) {
+
+
         try{
             RocketTuple rocketTuple = new RocketTuple(list,consumeConcurrentlyContext.getMessageQueue());
 
@@ -243,7 +245,7 @@ public class RocketSpout implements IRichSpout,
                 return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
             }else {
                 rocketTuple.waitFinish();
-                if(rocketTuple.isSuccess() == true){
+                if(rocketTuple.isSuccess()){
                     return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
                 }else{
                     return ConsumeConcurrentlyStatus.RECONSUME_LATER;

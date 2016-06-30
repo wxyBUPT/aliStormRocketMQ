@@ -219,7 +219,7 @@ public class Producer {
 
         double currentTotalTrades = from.get(minMiniute);
 
-        for(long currentMiniute = minMiniute;currentMiniute<=maxMiniute;currentMiniute++){
+        for(long currentMiniute = minMiniute;currentMiniute<=maxMiniute;currentMiniute+=60){
             if(from.get(currentMiniute) != null){
                 currentTotalTrades =+ currentTotalTrades + from.get(currentMiniute);
             }

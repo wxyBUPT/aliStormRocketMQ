@@ -7,6 +7,8 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Tuple;
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.RaceUtil;
+import com.alibaba.middleware.race.jstorm.Cache.Plat;
+import com.alibaba.middleware.race.jstorm.Cache.PlatInfo;
 import com.alibaba.middleware.race.jstorm.rocket.RocketTuple;
 import com.alibaba.middleware.race.model.OrderMessage;
 import com.alibaba.middleware.race.tair.TairOperatorImpl;
@@ -31,6 +33,8 @@ public class OrderWriteBolt implements IRichBolt{
     public void prepare(Map stromConf , TopologyContext context,OutputCollector collector){
         this.collector = collector;
         tairOperator = TairOperatorImpl.getInstance();
+        //设置线程的优先级为1
+        Thread.currentThread().setPriority(10);
     }
 
     @Override
@@ -69,20 +73,14 @@ public class OrderWriteBolt implements IRichBolt{
             // salerId='tb_daler4662',
             // createTime=1465371803978,
             // totalPrice=63129.08}
-            long orderId = orderMessage.getOrderId();
-            String salerId = orderMessage.getSalerId();
-            String platform ;
+            Long orderId = orderMessage.getOrderId();
+            Double totalPrice = orderMessage.getTotalPrice();
             if(messageExt.getTopic().equals(RaceConfig.MqTaoboaTradeTopic)){
-                platform = "tb";
+                PlatInfo.initOrderIdInfo(orderId, Plat.TAOBAO,totalPrice);
             }else if(messageExt.getTopic().equals(RaceConfig.MqTmallTradeTopic)){
-                platform = "tm";
+                PlatInfo.initOrderIdInfo(orderId,Plat.TM,totalPrice);
             }else {
-                platform = "";
-            }
-            //将平台信息发送到 tair
-            Boolean sendSuccessed = tairOperator.write(orderId,platform);
-            if(sendSuccessed){
-                collector.ack(tuple);
+                LOG.error("get wrong topic , topic is: " + messageExt.getTopic());
             }
             //一下单纯用于测试是否可以在Tair 中获得相关数据
             //System.out.println("下面的数据是从Tair 中获得的");

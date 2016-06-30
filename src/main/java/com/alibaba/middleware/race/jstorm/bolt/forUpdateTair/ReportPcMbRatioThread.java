@@ -42,7 +42,7 @@ public class ReportPcMbRatioThread implements Runnable{
         long minMiniute,maxMiniute;
         minMiniute = getMapMinKey(pcMiniuteTotalTrades);
         maxMiniute = getMapMaxKey(pcMiniuteTotalTrades);
-        for(long currentMiniute = minMiniute;currentMiniute<= maxMiniute;currentMiniute ++){
+        for(long currentMiniute = minMiniute;currentMiniute<= maxMiniute;currentMiniute += 60){
             double pcTotalTrades,mbTotalTrades;
             try {
                 pcTotalTrades = pcMiniuteTotalTrades.get(currentMiniute);
@@ -97,7 +97,7 @@ public class ReportPcMbRatioThread implements Runnable{
 
         double currentTotalTrades = from.get(minMiniute);
 
-        for(long currentMiniute = minMiniute;currentMiniute<=maxMiniute;currentMiniute++){
+        for(long currentMiniute = minMiniute;currentMiniute<=maxMiniute;currentMiniute += 60){
             if(from.get(currentMiniute) != null){
                 currentTotalTrades =+ currentTotalTrades + from.get(currentMiniute);
             }
