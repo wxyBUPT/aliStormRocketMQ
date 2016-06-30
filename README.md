@@ -2,6 +2,8 @@
 
 测试记录：
 
+[INFO 2016-06-30 22:09:17 c.a.m.r.j.b.PayMessageDeserializeBolt:114 Thread-44] Deserialize : 177030pay message has been succeed emit.0pay message has not been emit
+
 * 2016/06/30 22:25:17 当前版本为单个worker，并将订单信息存储到本地的cache 中，所有的bolt都为1，准确率为12.95%，查看日志数据量比较小，并且查看本地Cache总是失败
 
 ```  
@@ -13,3 +15,5 @@
 * 2016-06-30 23:11:06 准确率为0,BatchSize 从1 变为10
 
 * 2016-06-30 23:45:26 没有改变worker 数目，BatchSize 从10 变为1，准确率为8.26%
+
+* 2016/07/01 00:22:18 BatchSiz 从1 变为10 正确率为0，等待查看日志
