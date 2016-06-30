@@ -17,7 +17,6 @@ public class PlatInfo {
     }
 
     public static Plat getPlatAndIncrCalculatedPrice(Long orderId,Double price){
-        //显示的等1毫秒,等待订单信息被存储
         OrderSimpleInfo orderSimpleInfo = platDB.get(orderId);
         Plat plat;
         if(orderSimpleInfo !=null){

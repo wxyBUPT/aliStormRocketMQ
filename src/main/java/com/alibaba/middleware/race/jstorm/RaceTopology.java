@@ -39,7 +39,7 @@ public class RaceTopology {
         //取消ack
         Map conf = new HashMap();
         Config.setNumAckers(conf,0);
-        Config.setNumWorkers(conf,4);
+        Config.setNumWorkers(conf,1);
 
         try {
             StormSubmitter.submitTopology(TOPOLOGY_NAME,conf,builder.createTopology());
@@ -67,23 +67,23 @@ public class RaceTopology {
 
         //初始化两个订单信息同步到 Tair 中的bolt
         OrderWriteBolt OrderWriteBolt = new OrderWriteBolt();
-        builder.setBolt(ORDERMESSAGE_WRITE_BOLT_ID,OrderWriteBolt,3).setNumTasks(3)
+        builder.setBolt(ORDERMESSAGE_WRITE_BOLT_ID,OrderWriteBolt,4).setNumTasks(1)
                 .shuffleGrouping(ROCKETSPOUT_ID);
 
         //解序列化付款信息,同时查看Tair 来自哪个交易平台
         PayMessageDeserializeBolt payMessageDeserializeBolt =
                 new PayMessageDeserializeBolt();
         builder.setBolt(PAYMENTMESSAGE_DESERIALIZE_BOLT_ID,payMessageDeserializeBolt
-                ,4).shuffleGrouping(ROCKETSPOUT_ID);
+                ,4).setNumTasks(1).shuffleGrouping(ROCKETSPOUT_ID);
 
 
         //计算每分钟不同平台交易额比例的bolt
         MiniuteTbTmTradeBolt miniuteTbTmTradeBolt = new MiniuteTbTmTradeBolt();
-        builder.setBolt(MINIUTETBTMTRADEBOLT_ID,miniuteTbTmTradeBolt,2).shuffleGrouping(PAYMENTMESSAGE_DESERIALIZE_BOLT_ID);
+        builder.setBolt(MINIUTETBTMTRADEBOLT_ID,miniuteTbTmTradeBolt,1).shuffleGrouping(PAYMENTMESSAGE_DESERIALIZE_BOLT_ID);
 
         //每分钟不同客户端交易额计算的bolt
         MiniutePcMbTradeBolt miniutePcMbTradeBolt = new MiniutePcMbTradeBolt();
-        builder.setBolt(MINIUTEPCMBTRADEBOLT_ID,miniutePcMbTradeBolt,2).shuffleGrouping(PAYMENTMESSAGE_DESERIALIZE_BOLT_ID);
+        builder.setBolt(MINIUTEPCMBTRADEBOLT_ID,miniutePcMbTradeBolt,1).shuffleGrouping(PAYMENTMESSAGE_DESERIALIZE_BOLT_ID);
 
         return builder;
     }

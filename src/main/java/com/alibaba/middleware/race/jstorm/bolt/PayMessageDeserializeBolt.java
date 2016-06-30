@@ -201,7 +201,6 @@ class NextTupleThread implements Runnable{
                                 payAmount
                         ));
                 }
-                Thread.sleep(5);
             }catch (Exception e){
                 e.printStackTrace();
             }
