@@ -60,7 +60,7 @@ public class OrderWriteBolt implements IRichBolt{
             //开始Deserialize 付款信息
             if(messageExt.getTopic().equals(RaceConfig.MqPayTopic)) {
                 collector.ack(tuple);
-                break;
+                continue;
             }
             byte[] body = messageExt.getBody();
             if(body.length == 2 && body[0] ==0 && body[1] ==0){
