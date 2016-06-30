@@ -20,14 +20,15 @@ public class RaceConfig implements Serializable{
     public static String MqTmallTradeTopic = "MiddlewareRaceTestData_TMOrder";
     public static String MqTaoboaTradeTopic = "MiddlewareRaceTestData_TBOrder";
 
-    public static String TairConfigServer = "115.28.93.106:5198";
-    //public static String TairConfigServer = "10.101.72.127:5198";
-    public static String TairSalveConfigServer =null;
-    //public static String TairSalveConfigServer = "10.101.72.128:5198";
-    public static String TairGroup = "group_1";
-    //public static String TairGroup = "group_tianchi";
-    //public static Integer TairNamespace = 25395;
-    public static Integer TairNamespace = 0;
+    public static String TairConfigServer = "10.101.72.127:5198";
+    public static String TairSalveConfigServer = "10.101.72.128:5198";
+    public static String TairGroup = "group_tianchi";
+    public static Integer TairNamespace = 25395;
+
+    //public static String TairConfigServer = "115.28.93.106:5198";
+    //public static String TairSalveConfigServer =null;
+    //public static String TairGroup = "group_1";
+    //public static Integer TairNamespace = 0;
 
     //测试环境使用配置
     public static boolean isConsumerFromFirstOffset = true;
