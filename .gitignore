@@ -6,3 +6,6 @@ Cpp.txt
 *.log
 logs/
 *.iml
+src/main/java/com/alibaba/middleware/race/forLearn
+src/main/java/com/alibaba/middleware/race/helloStrom
+src/main/java/com/alibaba/middleware/race/forLearn/
