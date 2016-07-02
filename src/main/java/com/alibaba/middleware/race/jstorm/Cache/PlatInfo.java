@@ -32,7 +32,7 @@ public class PlatInfo {
         }
         return plat;
     }
-    
+
     public static String getInfo(){
         StringBuilder sb = new StringBuilder();
         sb.append("platDbHashMap size:  ").append(platDB.size());

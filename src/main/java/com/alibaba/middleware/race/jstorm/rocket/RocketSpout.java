@@ -136,12 +136,8 @@ public class RocketSpout implements IRichSpout,
         this.id = topologyContext.getThisComponentId() + ":" + topologyContext.getThisTaskId();
         this.sendingQueue = new LinkedBlockingDeque<RocketTuple>();
 
-        this.flowControl = JStormUtils.parseBoolean(
-                conf.get(RocketClientConfig.META_SPOUT_FLOW_CONTROL),true
-        );
-        this.autoAck = JStormUtils.parseBoolean(
-                conf.get(RocketClientConfig.META_SPOUT_AUTO_ACK),true
-        );
+        this.flowControl = true;
+        this.autoAck = false;
 
         StringBuilder sb = new StringBuilder();
         sb.append("Begin to init MqSpout:").append(id);
