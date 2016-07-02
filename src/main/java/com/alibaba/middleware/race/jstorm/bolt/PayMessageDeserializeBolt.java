@@ -40,6 +40,13 @@ public class PayMessageDeserializeBolt implements IRichBolt{
     protected static AtomicLong queryLocalCacheSucceedCount = new AtomicLong(0L);
     protected static AtomicLong queryLocalCacheFailCount = new AtomicLong(0L);
 
+    public static String getInfo(){
+        StringBuilder  sb = new StringBuilder();
+        sb.append("Paymessage queryLocalCacheSucceed count: ").append(queryLocalCacheSucceedCount.get());
+        sb.append("Paymessage queryLocalCacheFail count: ").append(queryLocalCacheSucceedCount.get());
+        return sb.toString();
+    }
+
     protected LinkedBlockingDeque<PaymentMessageWithFailCount> paymentMessageCacheQueue;
 
     @Override
@@ -62,22 +69,12 @@ public class PayMessageDeserializeBolt implements IRichBolt{
                 System.out.println("Got the end signal and do someThing");
                 continue;
             }
-
             PaymentMessage paymentMessage = RaceUtil.readKryoObject(PaymentMessage.class,body);
-            //PaymentMessage{orderId=1465113547983,
-            // payAmount=1754.0,
-            // paySource=0,
-            // payPlatform=0,
-            // createTime=1465113548255}
             long createTime = paymentMessage.getCreateTime();
             short plat_pc_mb = paymentMessage.getPayPlatform();
             long minuteTime = (createTime / 1000/60)*60;
             long orderId = paymentMessage.getOrderId();
             double payAmount = paymentMessage.getPayAmount();
-            //根据订单id 在Tair 中发查询平台信息,因为一个 tuple 被为只有一个payMessage,
-            //所以如果查询不成功会执行 collector.fail() 操作
-            //System.out.println("收到付款信息,orderId 为 " + orderId);
-            //从本地Cache 中获得平台信息
             Plat plat = PlatInfo.getPlatAndIncrCalculatedPrice(orderId,payAmount);
             if(plat != null){
                 queryLocalCacheSucceedCount.addAndGet(1);

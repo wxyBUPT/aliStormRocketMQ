@@ -15,6 +15,7 @@ import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.RaceUtil;
 import com.alibaba.middleware.race.jstorm.Cache.Plat;
 import com.alibaba.middleware.race.jstorm.Cache.PlatInfo;
+import com.alibaba.middleware.race.jstorm.bolt.PayMessageDeserializeBolt;
 import com.alibaba.middleware.race.model.OrderMessage;
 import com.alibaba.rocketmq.client.consumer.DefaultMQPushConsumer;
 import com.alibaba.rocketmq.client.consumer.MQPushConsumer;
@@ -185,8 +186,7 @@ public class RocketSpout implements IRichSpout,
         sb.append("ReportStatuc: ").append("taobaoOrderCount: ").append(taobaoOrderCount.get()).append("  ,");
         sb.append("tmOrderCount: ").append(tmOrderCount.get()).append("   ,");
         sb.append("CacheHashMapCount : ").append(PlatInfo.getInfo()).append("   ,");
-        sb.append("PaymentMessage succeed Count: ").append(paymessageConsumeSucceedCount.get()).append("   ,");
-        sb.append("PaymentMessage query fail Count ").append(paymessageConsumeFailCount);
+        sb.append("QueryCache:  ").append(PayMessageDeserializeBolt.getInfo()).append("   ,");
         LOG.info(sb.toString());
     }
 
