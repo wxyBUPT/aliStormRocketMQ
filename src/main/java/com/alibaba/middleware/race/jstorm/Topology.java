@@ -50,7 +50,7 @@ public class Topology {
         RocketSpout rocketSpout = new RocketSpout(
                 allTopic,
                 RaceConfig.MetaConsumerGroup,
-                1
+                36
         );
         System.out.println("我就是想不通");
         builder.setSpout(ROCKETSPOUT_ID,rocketSpout,1);

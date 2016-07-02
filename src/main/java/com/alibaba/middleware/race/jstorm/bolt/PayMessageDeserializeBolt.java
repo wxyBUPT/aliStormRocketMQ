@@ -56,10 +56,7 @@ public class PayMessageDeserializeBolt implements IRichBolt{
         List<MessageExt> messageExtList = rocketTuple.getMsgList();
         int messageCount = messageExtList.size();
         for(MessageExt messageExt:messageExtList){
-            if(messageExt.getTopic().equals(RaceConfig.MqTaoboaTradeTopic) || messageExt.getTopic().equals(RaceConfig.MqTmallTradeTopic)){
-                continue;
-            }
-            //Deserialize 付款信息
+
             byte[] body = messageExt.getBody();
             if(body.length == 2 && body[0] == 0 && body[1] == 0){
                 System.out.println("Got the end signal and do someThing");

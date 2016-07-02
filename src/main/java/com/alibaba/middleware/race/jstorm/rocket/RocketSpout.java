@@ -243,6 +243,9 @@ public class RocketSpout implements IRichSpout,
 
     @Override
     public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> list, ConsumeConcurrentlyContext consumeConcurrentlyContext) {
+        StringBuilder sb = new StringBuilder();
+
+        int listLen = list.size();
 
         for(MessageExt messageExt:list){
             byte[] body = messageExt.getBody();
@@ -250,14 +253,15 @@ public class RocketSpout implements IRichSpout,
                 OrderMessage orderMessage = RaceUtil.readKryoObject(OrderMessage.class, body);
                 consumeTbOrderMessage(orderMessage);
                 taobaoOrderCount.incrementAndGet();
-                return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
+                listLen--;
             } else if (messageExt.getTopic().equals(RaceConfig.MqTmallTradeTopic)) {
                 OrderMessage orderMessage = RaceUtil.readKryoObject(OrderMessage.class, body);
                 consumeTmOrderMessage(orderMessage);
                 tmOrderCount.incrementAndGet();
-                return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
+                listLen--;
             }
         }
+        if(listLen==0)return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
 
         try{
             RocketTuple rocketTuple = new RocketTuple(list,consumeConcurrentlyContext.getMessageQueue());
