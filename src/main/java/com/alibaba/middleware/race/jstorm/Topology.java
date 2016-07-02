@@ -6,7 +6,6 @@ import backtype.storm.topology.TopologyBuilder;
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.jstorm.bolt.MiniutePcMbTradeBolt;
 import com.alibaba.middleware.race.jstorm.bolt.MiniuteTbTmTradeBolt;
-import com.alibaba.middleware.race.jstorm.bolt.OrderWriteBolt;
 import com.alibaba.middleware.race.jstorm.bolt.PayMessageDeserializeBolt;
 import com.alibaba.middleware.race.jstorm.rocket.RocketSpout;
 import org.slf4j.Logger;
@@ -39,17 +38,9 @@ public class Topology {
         submitTopology(builder);
     }
 
-    private static TopologyBuilder setupBuilder() throws Exception {
+    private static TopologyBuilder setupBuilder() throws Exception{
 
         TopologyBuilder builder = new TopologyBuilder();
-
-        //使用环境变量获得rocketmq nameserver 的值
-        String key = "rocketmq.namesrv.addr";
-        String nameServer = System.getProperty(key);
-
-        if (nameServer == null) {
-
-        }
 
         //初始化三个bolt
         List<String> allTopic = new ArrayList<String>();
@@ -61,26 +52,20 @@ public class Topology {
                 RaceConfig.MetaConsumerGroup,
                 null,1
         );
+        System.out.println("我就是想不通");
         builder.setSpout(ROCKETSPOUT_ID,rocketSpout,1);
 
-
-        //初始化两个订单信息同步到 Tair 中的bolt
-        OrderWriteBolt OrderWriteBolt = new OrderWriteBolt();
-        builder.setBolt(ORDERMESSAGE_WRITE_BOLT_ID,OrderWriteBolt,2).setNumTasks(2)
-                .shuffleGrouping(ROCKETSPOUT_ID);
 
         //解序列化付款信息,同时查看Tair 来自哪个交易平台
         PayMessageDeserializeBolt payMessageDeserializeBolt =
                 new PayMessageDeserializeBolt();
         builder.setBolt(PAYMENTMESSAGE_DESERIALIZE_BOLT_ID,payMessageDeserializeBolt
-                ,1).shuffleGrouping(ROCKETSPOUT_ID);
+                ,4).setNumTasks(1).shuffleGrouping(ROCKETSPOUT_ID);
 
 
         //计算每分钟不同平台交易额比例的bolt
         MiniuteTbTmTradeBolt miniuteTbTmTradeBolt = new MiniuteTbTmTradeBolt();
-        //builder.setBolt(CALCULATERATIO_BOLT_ID,calculateRatioBolt,1).shuffleGrouping(PAYMENTMESSAGE_DESERIALIZE_BOLT_ID);
         builder.setBolt(MINIUTETBTMTRADEBOLT_ID,miniuteTbTmTradeBolt,1).shuffleGrouping(PAYMENTMESSAGE_DESERIALIZE_BOLT_ID);
-        //builder.setBolt(MINIUTETBTMTRADEBOLT_ID,miniuteTbTmTradeBolt,2).setNumTasks(2).fieldsGrouping(PAYMENTMESSAGE_DESERIALIZE_BOLT_ID,new Fields("plat_tm_tb"));
 
         //每分钟不同客户端交易额计算的bolt
         MiniutePcMbTradeBolt miniutePcMbTradeBolt = new MiniutePcMbTradeBolt();

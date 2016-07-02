@@ -205,7 +205,5 @@ class NextTupleThread implements Runnable{
                 e.printStackTrace();
             }
         }
-
-
     }
 }

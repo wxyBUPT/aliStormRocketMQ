@@ -32,6 +32,12 @@ public class PlatInfo {
         }
         return plat;
     }
+    
+    public static String getInfo(){
+        StringBuilder sb = new StringBuilder();
+        sb.append("platDbHashMap size:  ").append(platDB.size());
+        return sb.toString();
+    }
 
     //如果没有查询到,则注册异步回调函数
 

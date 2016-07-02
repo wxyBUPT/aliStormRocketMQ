@@ -6,7 +6,6 @@ import backtype.storm.topology.TopologyBuilder;
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.jstorm.bolt.MiniutePcMbTradeBolt;
 import com.alibaba.middleware.race.jstorm.bolt.MiniuteTbTmTradeBolt;
-import com.alibaba.middleware.race.jstorm.bolt.OrderWriteBolt;
 import com.alibaba.middleware.race.jstorm.bolt.PayMessageDeserializeBolt;
 import com.alibaba.middleware.race.jstorm.rocket.RocketSpout;
 import org.slf4j.Logger;
@@ -64,11 +63,6 @@ public class RaceTopology {
         );
         builder.setSpout(ROCKETSPOUT_ID,rocketSpout,1);
 
-
-        //初始化两个订单信息同步到 Tair 中的bolt
-        OrderWriteBolt OrderWriteBolt = new OrderWriteBolt();
-        builder.setBolt(ORDERMESSAGE_WRITE_BOLT_ID,OrderWriteBolt,4).setNumTasks(1)
-                .shuffleGrouping(ROCKETSPOUT_ID);
 
         //解序列化付款信息,同时查看Tair 来自哪个交易平台
         PayMessageDeserializeBolt payMessageDeserializeBolt =

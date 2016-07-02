@@ -11,6 +11,11 @@ import com.alibaba.jstorm.client.spout.IFailValueSpout;
 import com.alibaba.jstorm.common.metric.AsmHistogram;
 import com.alibaba.jstorm.metric.MetricClient;
 import com.alibaba.jstorm.utils.JStormUtils;
+import com.alibaba.middleware.race.RaceConfig;
+import com.alibaba.middleware.race.RaceUtil;
+import com.alibaba.middleware.race.jstorm.Cache.Plat;
+import com.alibaba.middleware.race.jstorm.Cache.PlatInfo;
+import com.alibaba.middleware.race.model.OrderMessage;
 import com.alibaba.rocketmq.client.consumer.DefaultMQPushConsumer;
 import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
@@ -44,6 +49,10 @@ public class RocketSpout implements IRichSpout,
     protected String id;
     protected boolean flowControl;
     protected boolean autoAck;
+    protected final static AtomicInteger taobaoOrderCount = new AtomicInteger();
+    protected final static AtomicInteger tmOrderCount = new AtomicInteger();
+    protected final static AtomicInteger paymessageConsumeSucceedCount = new AtomicInteger();
+    protected final static AtomicInteger paymessageConsumeFailCount = new AtomicInteger();
 
     protected transient LinkedBlockingDeque<RocketTuple> sendingQueue;
 
@@ -176,6 +185,29 @@ public class RocketSpout implements IRichSpout,
                 }
             }).start();
         }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(true){
+                    try{
+                        Thread.sleep(20000);
+                    }catch (Exception e){
+
+                    }
+                    report();
+                }
+            }
+        }).start();
+    }
+
+    private void report(){
+        StringBuilder sb = new StringBuilder();
+        sb.append("ReportStatuc: ").append("taobaoOrderCount: ").append(taobaoOrderCount.get()).append("  ,");
+        sb.append("tmOrderCount: ").append(tmOrderCount.get()).append("   ,");
+        sb.append("CacheHashMapCount : ").append(PlatInfo.getInfo()).append("   ,");
+        sb.append("PaymentMessage succeed Count: ").append(paymessageConsumeSucceedCount.get()).append("   ,");
+        sb.append("PaymentMessage query fail Count ").append(paymessageConsumeFailCount);
+        LOG.info(sb.toString());
     }
 
     @Override
@@ -231,6 +263,20 @@ public class RocketSpout implements IRichSpout,
     @Override
     public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> list, ConsumeConcurrentlyContext consumeConcurrentlyContext) {
 
+        for(MessageExt messageExt:list){
+            byte[] body = messageExt.getBody();
+            if (messageExt.getTopic().equals(RaceConfig.MqTaoboaTradeTopic)) {
+                OrderMessage orderMessage = RaceUtil.readKryoObject(OrderMessage.class, body);
+                consumeTbOrderMessage(orderMessage);
+                taobaoOrderCount.incrementAndGet();
+                return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
+            } else if (messageExt.getTopic().equals(RaceConfig.MqTmallTradeTopic)) {
+                OrderMessage orderMessage = RaceUtil.readKryoObject(OrderMessage.class, body);
+                consumeTmOrderMessage(orderMessage);
+                tmOrderCount.incrementAndGet();
+                return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
+            }
+        }
 
         try{
             RocketTuple rocketTuple = new RocketTuple(list,consumeConcurrentlyContext.getMessageQueue());
@@ -255,5 +301,21 @@ public class RocketSpout implements IRichSpout,
             LOG.error("Fail to emit " + id,e);
             return ConsumeConcurrentlyStatus.RECONSUME_LATER;
         }
+    }
+    //消费淘宝订单消息
+    private void consumeTbOrderMessage(OrderMessage orderMessage){
+        Long orderId = orderMessage.getOrderId();
+        Double totalPrice = orderMessage.getTotalPrice();
+        Plat plat = Plat.TAOBAO;
+        PlatInfo.initOrderIdInfo(orderId,plat,totalPrice);
+
+    }
+
+    //消费天猫订单消息
+    private void consumeTmOrderMessage(OrderMessage orderMessage){
+        Long orderId = orderMessage.getOrderId();
+        Double totalPrice = orderMessage.getTotalPrice();
+        Plat plat = Plat.TM;
+        PlatInfo.initOrderIdInfo(orderId,plat,totalPrice);
     }
 }
