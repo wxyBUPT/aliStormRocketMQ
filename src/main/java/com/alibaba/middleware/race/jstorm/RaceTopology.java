@@ -38,7 +38,7 @@ public class RaceTopology {
         //取消ack
         Map conf = new HashMap();
         Config.setNumAckers(conf,0);
-        Config.setNumWorkers(conf,2);
+        Config.setNumWorkers(conf,1);
 
         try {
             StormSubmitter.submitTopology(TOPOLOGY_NAME,conf,builder.createTopology());
@@ -59,7 +59,7 @@ public class RaceTopology {
         RocketSpout rocketSpout = new RocketSpout(
                 allTopic,
                 RaceConfig.MetaConsumerGroup,
-                6
+                1
         );
         builder.setSpout(ROCKETSPOUT_ID,rocketSpout,2).setNumTasks(2);
 
@@ -68,7 +68,7 @@ public class RaceTopology {
         PayMessageDeserializeBolt payMessageDeserializeBolt =
                 new PayMessageDeserializeBolt();
         builder.setBolt(PAYMENTMESSAGE_DESERIALIZE_BOLT_ID,payMessageDeserializeBolt
-                ,4).setNumTasks(2).shuffleGrouping(ROCKETSPOUT_ID);
+                ,2).setNumTasks(2).shuffleGrouping(ROCKETSPOUT_ID);
 
 
         //计算每分钟不同平台交易额比例的bolt
