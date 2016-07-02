@@ -138,7 +138,7 @@ class PaymentMessageWithFailCount{
 
     //如果失败超过五次,则认为不能
     boolean isFail(){
-        return failCount>=50;
+        return failCount>=60;
     }
 }
 
