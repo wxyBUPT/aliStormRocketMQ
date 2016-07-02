@@ -17,6 +17,7 @@ import com.alibaba.middleware.race.jstorm.Cache.Plat;
 import com.alibaba.middleware.race.jstorm.Cache.PlatInfo;
 import com.alibaba.middleware.race.model.OrderMessage;
 import com.alibaba.rocketmq.client.consumer.DefaultMQPushConsumer;
+import com.alibaba.rocketmq.client.consumer.MQPushConsumer;
 import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import com.alibaba.rocketmq.client.consumer.listener.MessageListenerConcurrently;
@@ -56,36 +57,23 @@ public class RocketSpout implements IRichSpout,
 
     protected transient LinkedBlockingDeque<RocketTuple> sendingQueue;
 
-    protected transient MetricClient metricClient;
-    protected transient AsmHistogram waithHistogram;
-    protected transient AsmHistogram processHistogram;
-
     private final List<String> rocketConsumeTopics;
     private final String rocketConsumeGroup;
-    private final String nameServer;
-    private final String subExp = "*";
+    private final String subExp = null;
     //设置consumer 默认的 batchSize
     private int pullBatchSize = 32;
 
     //只提供一种初始化的方式,所有的spout 都可以使用这份代码
-    public RocketSpout(List<String> rocketConsumeTopics,String rocketConsumeGroup,String nameServer){
+    public RocketSpout(List<String> rocketConsumeTopics,String rocketConsumeGroup){
         //初始化rocket Topic 信息
         this.rocketConsumeTopics = rocketConsumeTopics;
         this.rocketConsumeGroup = rocketConsumeGroup;
-        this.nameServer = nameServer;
     }
 
-    public RocketSpout(List<String> rocketConsumeTopics,String rocketConsumeGroup,String nameServer,int batchSize){
+    public RocketSpout(List<String> rocketConsumeTopics,String rocketConsumeGroup,int batchSize){
         this.rocketConsumeTopics = rocketConsumeTopics;
         this.rocketConsumeGroup = rocketConsumeGroup;
         this.pullBatchSize = batchSize;
-        this.nameServer = nameServer;
-    }
-
-    public void initMetricClient(TopologyContext context){
-        metricClient = new MetricClient(context);
-        waithHistogram = metricClient.registerHistogram("MetaTupleWait",null);
-        processHistogram = metricClient.registerHistogram("MetaTupleProcess",null);
     }
 
     @Override
@@ -124,8 +112,6 @@ public class RocketSpout implements IRichSpout,
     }
 
     public void finishTuple(RocketTuple rocketTuple){
-        waithHistogram.update(rocketTuple.getEmitMs() - rocketTuple.getCreateMs());
-        processHistogram.update(System.currentTimeMillis() - rocketTuple.getEmitMs());
         rocketTuple.done();
     }
 
@@ -137,7 +123,7 @@ public class RocketSpout implements IRichSpout,
         this.sendingQueue = new LinkedBlockingDeque<RocketTuple>();
 
         this.flowControl = true;
-        this.autoAck = false;
+        this.autoAck = RaceConfig.AutoAck;
 
         StringBuilder sb = new StringBuilder();
         sb.append("Begin to init MqSpout:").append(id);
@@ -145,9 +131,7 @@ public class RocketSpout implements IRichSpout,
         sb.append(", autoAck:").append(autoAck);
         LOG.info(sb.toString());
 
-        initMetricClient(topologyContext);
-
-        rocketClientConfig = new RocketClientConfig(this.rocketConsumeGroup,this.nameServer,this.rocketConsumeTopics
+        rocketClientConfig = new RocketClientConfig(this.rocketConsumeGroup,this.rocketConsumeTopics
         ,this.subExp);
         rocketClientConfig.setPullBatchSize(this.pullBatchSize);
 
@@ -208,6 +192,7 @@ public class RocketSpout implements IRichSpout,
 
     @Override
     public void close() {
+        report();
         if(consumer !=null){
             consumer.shutdown();
         }
@@ -229,7 +214,7 @@ public class RocketSpout implements IRichSpout,
 
     public void sendTuple(RocketTuple rocketTuple){
         rocketTuple.updateEmitMs();
-        collector.emit(new Values(rocketTuple));
+        collector.emit(new Values(rocketTuple),rocketTuple.getCreateMs());
     }
 
     @Override
@@ -313,5 +298,9 @@ public class RocketSpout implements IRichSpout,
         Double totalPrice = orderMessage.getTotalPrice();
         Plat plat = Plat.TM;
         PlatInfo.initOrderIdInfo(orderId,plat,totalPrice);
+    }
+
+    public DefaultMQPushConsumer getConsumer(){
+        return consumer;
     }
 }

@@ -38,12 +38,13 @@ public class RaceConfig implements Serializable{
     public static Integer ReportRatioToTairInterval = 30000;
     //tb,tm Trade 同步到 Tair 的时间间隔.
     public static Integer ReportTbTmTradeInterval = 25000;
+    public static boolean AutoAck = true;
 
     //下面的参数是用于本地测试的
     //redis 中保存pc mb 每分钟交易额 的所有key 值的key
-    public static String KeySetForTmTb= "newRandsssdddiiiidiiidiiijodddiiiiiiiKeyNewwwwww";
-    public static String KeySetForRatio = "newdddRssssandiiiiiiomdiiiiddRiiiiijatioKeyRRRRRRRRR";
-    public static String TaobaoOrderMessageCount = "tssiiisbOriiiiiiidedddrMesiiisageCounttt";
-    public static String TMOrderMessageCount = "tmOrdddsssdiiiiiieriiiiiiMedddssagiiieCount";
-    public static String PaymentMessageCount = "paymendddssstMeiiiiiiiiiissdddageCiiiount";
+    public static String KeySetForTmTb= "newRansdddiiiidiiidiiijodddiiiiiiiKeyNewwwwww";
+    public static String KeySetForRatio = "newdddssandiiiiiiomdiiiiddRiiiiijatioKeyRRRRRRRRR";
+    public static String TaobaoOrderMessageCount = "iiisbOriiiiiiidedddrMesiiisageCounttt";
+    public static String TMOrderMessageCount = "tmddsssdiiiiiieriiiiiiMedddssagiiieCount";
+    public static String PaymentMessageCount = "paydddssstMeiiiiiiiiiissdddageCiiiount";
 }

@@ -19,50 +19,14 @@ public class RocketClientConfig implements Serializable {
 
     private static final long serialVersionUID = 4157424979688593280L;
 
-    public static final String META_TOPIC = "meta.topic";
-    public static final String META_CONSUMER_GROUP = "meta.consumer.group";
-    public static final String META_SUBEXPRESS = "meta.subexpress";
     public static final String META_NAMESERVER = "meta.nameserver";
-    //pull interval(ms) from meta server
-    public static final String META_PULL_INTERVAL = "meta.pull.interval.ms";
-    // max fail times
-    public static final String META_MAX_FAIL_TIMES = "meta.max.fail.times";
-    // meta client internal queue size
-    public static final String META_INTERNAL_QUEUE_SIZE = "meta.internal.queue.size";
-    // spout send one batch size
-    public static final String META_BATCH_SEND_MSG_SIZE = "meta.batch.send.msg.size";
-    // meta client pull batch size from meta server
-    public static final String META_BATCH_PULL_MSG_SIZE = "meta.batch.pull.msg.size";
-    // meta client pull thread num
-    public static final String META_PULL_THREAD_NUM = "meta.pull.thread.num";
-    // meta message automatically ack
-    public static final String META_SPOUT_AUTO_ACK = "meta.spout.auto.ack";
-    // enable meta spout flow control
-    public static final String META_SPOUT_FLOW_CONTROL= "meta.spout.flow.control";
-
-    // format is "yyyyMMddHHmmss"
-    // set the meta client offset from this timestamp
-    public static final String META_CONSUMER_START_TIMESTAMP = "meta.consumer.start.timestamp";
-    public static final String META_EXTRA_PROPERTIES = "meta.extra.properties";
-
 
     private final String consumerGroup;
-
-    /**
-     * Alipay need set nameServer, taobao don't need set this field
-     */
-    private final String nameServer;
 
     private final List<String> topics;
 
     private final String subExpress;
 
-    /**
-     * The max allowed failures for one single message, skip the failure message
-     * if excesses
-     *
-     * -1 means try again until success
-     */
     private int maxFailTimes = DEFAULT_FAIL_TIME;
     public static final int DEFAULT_FAIL_TIME = 5;
 
@@ -108,67 +72,12 @@ public class RocketClientConfig implements Serializable {
 
     private Properties peroperties;
 
-    protected RocketClientConfig(String consumerGroup, String nameServer,
+    protected RocketClientConfig(String consumerGroup,
                                List<String> topics, String subExpress) {
         this.consumerGroup = consumerGroup;
-        this.nameServer = nameServer;
         this.topics = topics;
         this.subExpress = subExpress;
     }
-
-    public RocketClientConfig(Map conf) {
-        //topic = (String) conf.get(META_TOPIC);
-        topics = null;
-        consumerGroup = (String) conf.get(META_CONSUMER_GROUP);
-        subExpress = (String) conf.get(META_SUBEXPRESS);
-        if (StringUtils.isBlank((String) conf.get(META_NAMESERVER)) == false) {
-            nameServer = (String) conf.get(META_NAMESERVER);
-        }else {
-            nameServer = null;
-        }
-
-        maxFailTimes = JStormUtils.parseInt(conf.get(META_MAX_FAIL_TIMES),
-                DEFAULT_FAIL_TIME);
-
-        queueSize = JStormUtils.parseInt(conf.get(META_INTERNAL_QUEUE_SIZE),
-                DEFAULT_QUEUE_SIZE);
-
-        sendBatchSize = JStormUtils.parseInt(conf.get(META_BATCH_SEND_MSG_SIZE),
-                DEFAULT_BATCH_MSG_NUM);
-
-        pullBatchSize = JStormUtils.parseInt(conf.get(META_BATCH_PULL_MSG_SIZE),
-                DEFAULT_BATCH_MSG_NUM);
-
-        pullInterval = JStormUtils.parseInt(conf.get(META_PULL_INTERVAL), 0);
-
-        pullThreadNum = JStormUtils.parseInt(conf.get(META_PULL_THREAD_NUM),
-                DEFAULT_PULL_THREAD_NUM);
-
-        String ts = (String)conf.get(META_CONSUMER_START_TIMESTAMP);
-        if (ts != null) {
-            Date date = null;
-            try {
-                date = TimeFormat.getSecond(ts);
-            }catch(Exception e) {
-
-            }
-
-            if (date != null) {
-                startTimeStamp = date;
-            }
-        }
-
-        Object prop = conf.get(META_EXTRA_PROPERTIES);
-        if (prop != null && prop instanceof Properties) {
-            peroperties = (Properties)prop;
-        }
-    }
-
-    public static RocketClientConfig mkInstance(Map conf) {
-
-        return new RocketClientConfig(conf);
-    }
-
 
 
     public int getMaxFailTimes() {
@@ -239,16 +148,12 @@ public class RocketClientConfig implements Serializable {
         return consumerGroup;
     }
 
-    public String getNameServer() {
-        return nameServer;
-    }
 
     public List<String> getTopics() {
         return topics;
     }
 
     public void setTopics(List<String> topics){
-        return;
     }
 
     public String getSubExpress() {
