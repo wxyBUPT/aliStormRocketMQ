@@ -170,7 +170,7 @@ class NextTupleThread implements Runnable{
                         StringBuilder sb = new StringBuilder();
                         sb.append("DeserializeLog: get info from  local Cache fail , execute collector's fail function, orderId is : ").append("query local cache Succeed Count: "
                                 + PayMessageDeserializeBolt.queryLocalCacheSucceedCount.get()+ "query local Cache FailCount:  "+ PayMessageDeserializeBolt.queryLocalCacheFailCount.get());
-                        PayMessageDeserializeBolt.LOG.error(sb.toString());
+                        PayMessageDeserializeBolt.LOG.warn(sb.toString());
                     }else {
                         sendingQueue.offer(paymentMessageWithFailCount);
                     }
