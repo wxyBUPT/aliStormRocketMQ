@@ -123,7 +123,7 @@ class PlatCache{
     static private final ConcurrentHashMap<Long,OrderSimpleInfo> cache = new ConcurrentHashMap<Long, OrderSimpleInfo>();
 
     public PlatCache(){
-        
+
     }
 
     public Plat getPlatAndIncrCalculatedPrice(Long orderId,Double price){
