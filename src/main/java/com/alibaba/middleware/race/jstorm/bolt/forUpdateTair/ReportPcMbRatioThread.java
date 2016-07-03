@@ -35,10 +35,7 @@ public class ReportPcMbRatioThread implements Runnable{
         HashMap<Long,Double> pcMiniuteTotalTrades = miniuteTrades2miniuteTotalTradesmap(this.pcMiniuteTrades);
         HashMap<Long,Double> mbMiniuteTotalTrades = miniuteTrades2miniuteTotalTradesmap(this.mbMiniuteTrades);
         StringBuilder sb = new StringBuilder();
-        sb.append("WirelessPcTotalTradesBeforeCalculateRatio: ");
-        sb.append("Wireless client total trades every miniutes is :  " ).append(mbMiniuteTotalTrades);
-        sb.append("pc client total trades every miniutes is :  ").append(pcMiniuteTotalTrades);
-        LOG.info(sb.toString());
+        sb.append("移动端和pc 端的交易比例为: ");
         long minMiniute,maxMiniute;
         minMiniute = getMapMinKey(pcMiniuteTotalTrades);
         maxMiniute = getMapMaxKey(pcMiniuteTotalTrades);
@@ -63,32 +60,16 @@ public class ReportPcMbRatioThread implements Runnable{
 
             }
             try {
+                sb.append(RaceConfig.prex_ratio + " : " + ratio);
                 tairOperator.write(RaceConfig.prex_ratio + currentMiniute, ratio);
             }catch (Exception e){
                 LOG.error("Key: " + RaceConfig.prex_ratio + currentMiniute+ " has not been writen to Tair , ratio is : " + ratio);
                 LOG.trace(e.getStackTrace());
             }
         }
+        LOG.info(sb.toString());
     }
 
-    private List<Map.Entry<Long,Double>> miniuteTrades2miniuteTotalTrades(ConcurrentHashMap<Long,Double> from){
-        List<Map.Entry<Long,Double>> miniuteTotalTrades = new ArrayList<Map.Entry<Long, Double>>(from.entrySet());
-
-        Collections.sort(miniuteTotalTrades, new Comparator<Map.Entry<Long, Double>>() {
-            @Override
-            public int compare(Map.Entry<Long, Double> o1, Map.Entry<Long, Double> o2) {
-                return (o1.getKey().compareTo(o2.getKey()));
-            }
-        });
-
-        for(int i = 1;i<miniuteTotalTrades.size();i++){
-            Map.Entry<Long,Double> preEntry = miniuteTotalTrades.get(i-1);
-            Map.Entry<Long,Double> curEntry = miniuteTotalTrades.get(i);
-            curEntry.setValue(preEntry.getValue() + curEntry.getValue());
-        }
-
-        return miniuteTotalTrades;
-    }
 
     private HashMap<Long,Double> miniuteTrades2miniuteTotalTradesmap(ConcurrentHashMap<Long,Double> from){
         HashMap<Long,Double> miniuteTotalTradesmap = new HashMap<Long, Double>(from);
@@ -105,10 +86,6 @@ public class ReportPcMbRatioThread implements Runnable{
         }
 
         return miniuteTotalTradesmap;
-    }
-
-    public HashMap<Long,Double> forTest(){
-        return miniuteTrades2miniuteTotalTradesmap(this.mbMiniuteTrades);
     }
 
     private long getMapMinKey(HashMap<Long,Double> hashMap){

@@ -8,24 +8,19 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
 import com.alibaba.jstorm.client.spout.IAckValueSpout;
 import com.alibaba.jstorm.client.spout.IFailValueSpout;
-import com.alibaba.jstorm.common.metric.AsmHistogram;
-import com.alibaba.jstorm.metric.MetricClient;
-import com.alibaba.jstorm.utils.JStormUtils;
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.RaceUtil;
+import com.alibaba.middleware.race.jstorm.Cache.OrderSimpleInfo;
 import com.alibaba.middleware.race.jstorm.Cache.Plat;
-import com.alibaba.middleware.race.jstorm.Cache.PlatInfo;
-import com.alibaba.middleware.race.jstorm.bolt.PayMessageDeserializeBolt;
 import com.alibaba.middleware.race.model.OrderMessage;
 import com.alibaba.rocketmq.client.consumer.DefaultMQPushConsumer;
-import com.alibaba.rocketmq.client.consumer.MQPushConsumer;
 import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import com.alibaba.rocketmq.client.consumer.listener.MessageListenerConcurrently;
-import com.alibaba.rocketmq.client.exception.MQClientException;
 import com.alibaba.rocketmq.common.message.MessageExt;
 import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -49,14 +44,9 @@ public class RocketSpout implements IRichSpout,
     //这个配置文件中初始化的,因此为了订阅不同的topic 还要在每个专门的spout 中更改
     protected Map conf;
     protected String id;
-    protected boolean flowControl;
-    protected boolean autoAck;
-    protected final static AtomicInteger taobaoOrderCount = new AtomicInteger();
-    protected final static AtomicInteger tmOrderCount = new AtomicInteger();
-    protected final static AtomicInteger paymessageConsumeSucceedCount = new AtomicInteger();
-    protected final static AtomicInteger paymessageConsumeFailCount = new AtomicInteger();
 
-    protected transient LinkedBlockingDeque<RocketTuple> sendingQueue;
+    protected transient LinkedBlockingDeque<RocketTuple> paymentSendingQueue;
+    protected transient LinkedBlockingDeque<OrderSimpleInfo> orderMessageSendingQueue;
 
     private final List<String> rocketConsumeTopics;
     private final String rocketConsumeGroup;
@@ -77,15 +67,11 @@ public class RocketSpout implements IRichSpout,
         this.pullBatchSize = batchSize;
     }
 
-    @Override
-    public void ack(Object o, List<Object> list) {
-        RocketTuple rocketTuple = (RocketTuple) list.get(0);
-        finishTuple(rocketTuple);
-    }
+
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-        outputFieldsDeclarer.declare(new Fields("RocketTuple"));
+        outputFieldsDeclarer.declare(new Fields("type","tuple"));
     }
 
     @Override
@@ -94,42 +80,16 @@ public class RocketSpout implements IRichSpout,
     }
 
     @Override
-    public void fail(Object o, List<Object> list) {
-        RocketTuple rocketTuple = (RocketTuple) list.get(0);
-        AtomicInteger failTimes = rocketTuple.getFailureTimes();
-
-        int failNum = failTimes.incrementAndGet();
-        if(failNum > rocketClientConfig.getMaxFailTimes()){
-            LOG.warn("Message" + rocketTuple.getMq() + "fail times " + failNum);
-            finishTuple(rocketTuple);
-            return ;
-        }
-
-        if(flowControl){
-            sendingQueue.offer(rocketTuple);
-        }else {
-            sendTuple(rocketTuple);
-        }
-    }
-
-    public void finishTuple(RocketTuple rocketTuple){
-        rocketTuple.done();
-    }
-
-    @Override
     public void open(Map conf, TopologyContext topologyContext, SpoutOutputCollector spoutOutputCollector) {
         this.conf = conf;
         this.collector = spoutOutputCollector;
         this.id = topologyContext.getThisComponentId() + ":" + topologyContext.getThisTaskId();
-        this.sendingQueue = new LinkedBlockingDeque<RocketTuple>();
+        this.paymentSendingQueue= new LinkedBlockingDeque<RocketTuple>();
+        this.orderMessageSendingQueue = new LinkedBlockingDeque<OrderSimpleInfo>();
 
-        this.flowControl = true;
-        this.autoAck = RaceConfig.AutoAck;
 
         StringBuilder sb = new StringBuilder();
         sb.append("Begin to init MqSpout:").append(id);
-        sb.append(",flowControl:").append(flowControl);
-        sb.append(", autoAck:").append(autoAck);
         LOG.info(sb.toString());
 
         rocketClientConfig = new RocketClientConfig(this.rocketConsumeGroup,this.rocketConsumeTopics
@@ -182,12 +142,10 @@ public class RocketSpout implements IRichSpout,
     }
 
     private void report(){
-        StringBuilder sb = new StringBuilder();
-        sb.append("ReportStatuc: ").append("taobaoOrderCount: ").append(taobaoOrderCount.get()).append("  ,");
-        sb.append("tmOrderCount: ").append(tmOrderCount.get()).append("   ,");
-        sb.append("CacheHashMapCount : ").append(PlatInfo.getInfo()).append("   ,");
-        sb.append("QueryCache:  ").append(PayMessageDeserializeBolt.getInfo()).append("   ,");
-        LOG.info(sb.toString());
+
+        String info = "Current orderMessageSending queue Size : " + orderMessageSendingQueue.size() + " , Current " +
+                "paymentSending queue size is : " + paymentSendingQueue.size();
+        LOG.info(info);
     }
 
     @Override
@@ -212,23 +170,29 @@ public class RocketSpout implements IRichSpout,
         }
     }
 
-    public void sendTuple(RocketTuple rocketTuple){
-        rocketTuple.updateEmitMs();
-        collector.emit(new Values(rocketTuple),rocketTuple.getCreateMs());
+    private void sendPayMessage(RocketTuple rocketTuple){
+        collector.emit(new Values("pay",rocketTuple));
+    }
+
+    private void sendOrderMessage(OrderSimpleInfo orderSimpleInfo){
+        collector.emit(new Values("order",orderSimpleInfo));
     }
 
     @Override
     public void nextTuple() {
-        RocketTuple rocketTuple = null;
-        try{
-            rocketTuple = sendingQueue.take();
-        }catch (InterruptedException e){
+        //首先取出订单信息,取出是个订单信息,然后发送出去
+        List<OrderSimpleInfo> orderSimpleInfoList = new ArrayList<OrderSimpleInfo>();
+        orderMessageSendingQueue.drainTo(orderSimpleInfoList,10);
+        for(OrderSimpleInfo orderSimpleInfo:orderSimpleInfoList){
+            sendOrderMessage(orderSimpleInfo);
+        }
 
+        List<RocketTuple> rocketTuples = new ArrayList<RocketTuple>();
+        //付款信息每一次少取一点,因为最好要先消费好订单信息
+        paymentSendingQueue.drainTo(rocketTuples,6);
+        for(RocketTuple rocketTuple:rocketTuples){
+            sendPayMessage(rocketTuple);
         }
-        if(rocketTuple == null){
-            return;
-        }
-        sendTuple(rocketTuple);
     }
 
     @Override
@@ -242,66 +206,72 @@ public class RocketSpout implements IRichSpout,
     }
 
     @Override
-    public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> list, ConsumeConcurrentlyContext consumeConcurrentlyContext) {
-        StringBuilder sb = new StringBuilder();
+    public void ack(Object o, List<Object> list) {
 
-        int listLen = list.size();
+    }
 
+    @Override
+    public void fail(Object o, List<Object> list) {
+
+    }
+
+    private void consumeOrderMessage(List<MessageExt> list){
         for(MessageExt messageExt:list){
-            byte[] body = messageExt.getBody();
-            if (messageExt.getTopic().equals(RaceConfig.MqTaoboaTradeTopic)) {
-                OrderMessage orderMessage = RaceUtil.readKryoObject(OrderMessage.class, body);
-                consumeTbOrderMessage(orderMessage);
-                taobaoOrderCount.incrementAndGet();
-                listLen--;
-            } else if (messageExt.getTopic().equals(RaceConfig.MqTmallTradeTopic)) {
-                OrderMessage orderMessage = RaceUtil.readKryoObject(OrderMessage.class, body);
-                consumeTmOrderMessage(orderMessage);
-                tmOrderCount.incrementAndGet();
-                listLen--;
+            if(messageExt.getTopic().equals(RaceConfig.MqTaoboaTradeTopic)){
+                consumeTaoBaoOrderMessage(messageExt);
+            }else if(messageExt.getTopic().equals(RaceConfig.MqTmallTradeTopic)){
+                consumeTMOrderMessage(messageExt);
+            }else {
+                LOG.error("Neither TB Order or TM Order");
             }
         }
-        if(listLen==0)return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
+    }
+
+    private void consumeTaoBaoOrderMessage(MessageExt messageExt){
+        byte[] body = messageExt.getBody();
+        OrderMessage orderMessage = RaceUtil.readKryoObject(OrderMessage.class,body);
+        Long orderId = orderMessage.getOrderId();
+        Double totalPrice = orderMessage.getTotalPrice();
+        Plat plat = Plat.TAOBAO;
+        OrderSimpleInfo orderSimpleInfo = new OrderSimpleInfo(plat,totalPrice,orderId);
+        orderMessageSendingQueue.offer(orderSimpleInfo);
+
+    }
+
+    private void consumeTMOrderMessage(MessageExt messageExt){
+        byte[] body = messageExt.getBody();
+        OrderMessage orderMessage = RaceUtil.readKryoObject(OrderMessage.class,body);
+        Long orderId = orderMessage.getOrderId();
+        Double totalPrice = orderMessage.getTotalPrice();
+        Plat plat = Plat.TM;
+        OrderSimpleInfo orderSimpleInfo = new OrderSimpleInfo(plat,totalPrice,orderId);
+        orderMessageSendingQueue.offer(orderSimpleInfo);
+    }
+
+    @Override
+    public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> list, ConsumeConcurrentlyContext consumeConcurrentlyContext) {
 
         try{
-            RocketTuple rocketTuple = new RocketTuple(list,consumeConcurrentlyContext.getMessageQueue());
-
-            if(flowControl){
-                sendingQueue.offer(rocketTuple);
-            }else {
-                sendTuple(rocketTuple);
-            }
-
-            if(autoAck){
+            //如果是订单信息,则将订单信息解序列化,并添加到缓冲队列里面去
+            MessageExt messageExt = list.get(0);
+            if(!messageExt.getTopic().equals(RaceConfig.MqPayTopic)){
+                consumeOrderMessage(list);
                 return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
-            }else {
-                rocketTuple.waitFinish();
-                if(rocketTuple.isSuccess()){
-                    return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
-                }else{
-                    return ConsumeConcurrentlyStatus.RECONSUME_LATER;
-                }
             }
+        }catch (Exception e){
+
+        }
+
+        try{
+
+            RocketTuple rocketTuple = new RocketTuple(list,consumeConcurrentlyContext.getMessageQueue());
+            paymentSendingQueue.offer(rocketTuple);
+            return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
+
         }catch (Exception e){
             LOG.error("Fail to emit " + id,e);
             return ConsumeConcurrentlyStatus.RECONSUME_LATER;
         }
-    }
-    //消费淘宝订单消息
-    private void consumeTbOrderMessage(OrderMessage orderMessage){
-        Long orderId = orderMessage.getOrderId();
-        Double totalPrice = orderMessage.getTotalPrice();
-        Plat plat = Plat.TAOBAO;
-        PlatInfo.initOrderIdInfo(orderId,plat,totalPrice);
-
-    }
-
-    //消费天猫订单消息
-    private void consumeTmOrderMessage(OrderMessage orderMessage){
-        Long orderId = orderMessage.getOrderId();
-        Double totalPrice = orderMessage.getTotalPrice();
-        Plat plat = Plat.TM;
-        PlatInfo.initOrderIdInfo(orderId,plat,totalPrice);
     }
 
     public DefaultMQPushConsumer getConsumer(){

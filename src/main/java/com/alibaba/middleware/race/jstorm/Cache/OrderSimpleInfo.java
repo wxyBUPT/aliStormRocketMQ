@@ -6,15 +6,17 @@ package com.alibaba.middleware.race.jstorm.Cache;
  */
 public class OrderSimpleInfo {
 
-    public OrderSimpleInfo(Plat plat,Double totalPrice){
+    public OrderSimpleInfo(Plat plat,Double totalPrice,Long orderId){
         this.plat = plat;
         this.totalPrice = totalPrice;
         this.calculatedPrice = 0.0;
+        this.orderId = orderId;
     }
 
     private Double totalPrice;
     private Double calculatedPrice;
     private Plat plat;
+    private Long orderId;
 
     public Plat getPlat(){
         return plat;
@@ -30,6 +32,10 @@ public class OrderSimpleInfo {
         }else {
             return false;
         }
+    }
+
+    public Long getOrderId(){
+        return orderId;
     }
 
     public Double getTotalPrice(){
