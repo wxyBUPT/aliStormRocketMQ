@@ -4,6 +4,7 @@ import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichBolt;
+import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import com.alibaba.middleware.race.RaceUtil;
@@ -99,7 +100,10 @@ public class CacheBolt extends BaseRichBolt{
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-
+        outputFieldsDeclarer.declare(new Fields("plat_tm_tb",
+                "plat_pc_mb",
+                "minuteTime",
+                "payAmount"));
     }
 }
 
@@ -156,7 +160,7 @@ class NextTupleThread implements Runnable{
     PlatCache platCache;
 
 
-    public NextTupleThread(LinkedBlockingDeque sendingQueue,PlatCache platCache,OutputCollector collector){
+    public NextTupleThread(LinkedBlockingDeque<PaymentMessageWithFailCount> sendingQueue,PlatCache platCache,OutputCollector collector){
         this.sendingQueue = sendingQueue;
         this.collector = collector;
         this.platCache = platCache;
