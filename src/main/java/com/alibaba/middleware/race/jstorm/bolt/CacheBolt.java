@@ -59,10 +59,10 @@ public class CacheBolt extends BaseRichBolt{
         // Values("order",orderSimpleInfo)
         // Fields("type","tuple")
         String type = tuple.getStringByField("type");
-        if(type=="order"){
+        if(type.equals("order")){
             OrderSimpleInfo orderSimpleInfo = (OrderSimpleInfo) tuple.getValueByField("tuple");
             platCache.addOrderInfoToCache(orderSimpleInfo);
-        }else if(type == "pay"){
+        }else if(type.equals( "pay")){
             RocketTuple rocketTuple = (RocketTuple) tuple.getValueByField("tuple");
             List<MessageExt> messageExtList = rocketTuple.getMsgList();
             for(MessageExt messageExt:messageExtList){
@@ -177,6 +177,7 @@ class NextTupleThread implements Runnable{
 
         while(true){
             try {
+                Thread.sleep(5);
                 PaymentMessageWithFailCount paymentMessageWithFailCount = sendingQueue.take();
                 PaymentMessage paymentMessage = paymentMessageWithFailCount.paymentMessage;
                 Long orderId = paymentMessage.getOrderId();
@@ -190,7 +191,7 @@ class NextTupleThread implements Runnable{
                         sb.append("QueryCache Log : get info from  local Cache fail , execute collector's fail function," +
                                 " orderId is : ").append("query local cache Succeed Count: "
                                 + CacheBolt.queryLocalCacheSucceedCount.get()+ "query local Cache FailCount:  "+ CacheBolt.queryLocalCacheFailCount.get());
-                        CacheBolt.LOG.debug(sb.toString());
+                        CacheBolt.LOG.info(sb.toString());
                     }else {
                         sendingQueue.offer(paymentMessageWithFailCount);
                     }

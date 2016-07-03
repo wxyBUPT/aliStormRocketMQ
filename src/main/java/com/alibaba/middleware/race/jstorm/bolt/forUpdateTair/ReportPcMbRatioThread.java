@@ -60,7 +60,8 @@ public class ReportPcMbRatioThread implements Runnable{
 
             }
             try {
-                sb.append(RaceConfig.prex_ratio + " : " + ratio);
+                sb.append(RaceConfig.prex_ratio + currentMiniute + " : " + ratio);
+                sb.append("   ,  ");
                 tairOperator.write(RaceConfig.prex_ratio + currentMiniute, ratio);
             }catch (Exception e){
                 LOG.error("Key: " + RaceConfig.prex_ratio + currentMiniute+ " has not been writen to Tair , ratio is : " + ratio);
