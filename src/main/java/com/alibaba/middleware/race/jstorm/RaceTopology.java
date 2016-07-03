@@ -36,7 +36,7 @@ public class RaceTopology {
         //取消ack
         Map conf = new HashMap();
         Config.setNumAckers(conf,0);
-        Config.setNumWorkers(conf,1);
+        Config.setNumWorkers(conf,3);
 
         try {
             StormSubmitter.submitTopology(TOPOLOGY_NAME,conf,builder.createTopology());
@@ -57,7 +57,7 @@ public class RaceTopology {
         RocketSpout rocketSpout = new RocketSpout(
                 allTopic,
                 RaceConfig.MetaConsumerGroup,
-                1
+                2
         );
 
         builder.setSpout(ROCKETSPOUT_ID,rocketSpout,1).setNumTasks(1);
