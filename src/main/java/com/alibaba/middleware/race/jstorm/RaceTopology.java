@@ -22,7 +22,6 @@ import java.util.Map;
 public class RaceTopology {
 
     private static String ROCKETSPOUT_ID = "rocketSpoutId";
-    private static String ORDERMESSAGE_WRITE_BOLT_ID = "orderMessageWriteBolt";
     private static String TOPOLOGY_NAME = RaceConfig.JstormTopologyName;
 
     private static String CACHEBOLTID = "cacheBolt";
@@ -37,7 +36,7 @@ public class RaceTopology {
         //取消ack
         Map conf = new HashMap();
         Config.setNumAckers(conf,0);
-        Config.setNumWorkers(conf,1);
+        Config.setNumWorkers(conf,4);
 
         try {
             StormSubmitter.submitTopology(TOPOLOGY_NAME,conf,builder.createTopology());
@@ -61,7 +60,7 @@ public class RaceTopology {
                 1
         );
 
-        builder.setSpout(ROCKETSPOUT_ID,rocketSpout,1).setNumTasks(1);
+        builder.setSpout(ROCKETSPOUT_ID,rocketSpout,3).setNumTasks(3);
 
 
         //解序列化付款信息,同时查看Tair 来自哪个交易平台

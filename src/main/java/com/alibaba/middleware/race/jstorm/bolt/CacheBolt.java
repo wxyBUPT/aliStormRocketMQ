@@ -41,21 +41,6 @@ public class CacheBolt extends BaseRichBolt{
         this.collector = outputCollector;
         platCache = new PlatCache();
         payCache = new PayCache();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while(true) {
-                    try {
-                        Thread.sleep(1000);
-                    } catch (Exception e) {
-
-                    }
-                    StringBuilder sb = new StringBuilder();
-                    System.out.println("当前的platCache 为: " + platCache.toString());
-                    System.out.println("当前payCache 为: " + payCache.toString());
-                }
-            }
-        }).start();
     }
 
     @Override
@@ -100,6 +85,7 @@ public class CacheBolt extends BaseRichBolt{
                 Long orderId = paymentMessage.getOrderId();
                 Double payAmount = paymentMessage.getPayAmount();
                 Plat plat = platCache.getPlatAndIncrCalculatedPrice(orderId,payAmount);
+
                 if(plat != null){
                     Long createTime = paymentMessage.getCreateTime();
                     Long minuteTime = (createTime/1000/60)*60;
@@ -117,6 +103,7 @@ public class CacheBolt extends BaseRichBolt{
                     payCache.cachePaymentMessage(paymentMessage);
                 }
             }
+
         }else {
             LOG.error("Neither order message nor pay message");
         }
@@ -180,8 +167,10 @@ class PayCache{
 
     List<PaymentMessage> getPaymentMessagesByOrderIdAndRemove(Long orderId){
         List<PaymentMessage> paymentMessages;
-        paymentMessages = cache.get(orderId);
-        cache.remove(orderId);
+        synchronized (cache) {
+            paymentMessages = cache.get(orderId);
+            cache.remove(orderId);
+        }
         return paymentMessages;
     }
 

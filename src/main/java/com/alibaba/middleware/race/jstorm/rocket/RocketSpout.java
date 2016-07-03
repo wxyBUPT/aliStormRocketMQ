@@ -189,7 +189,7 @@ public class RocketSpout implements IRichSpout,
 
         List<RocketTuple> rocketTuples = new ArrayList<RocketTuple>();
         //付款信息每一次少取一点,因为最好要先消费好订单信息
-        paymentSendingQueue.drainTo(rocketTuples,6);
+        paymentSendingQueue.drainTo(rocketTuples,10);
         for(RocketTuple rocketTuple:rocketTuples){
             sendPayMessage(rocketTuple);
         }
