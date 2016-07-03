@@ -38,7 +38,7 @@ public class RaceTopology {
         //取消ack
         Map conf = new HashMap();
         Config.setNumAckers(conf,0);
-        Config.setNumWorkers(conf,1);
+        Config.setNumWorkers(conf,4);
 
         try {
             StormSubmitter.submitTopology(TOPOLOGY_NAME,conf,builder.createTopology());
@@ -61,14 +61,14 @@ public class RaceTopology {
                 RaceConfig.MetaConsumerGroup,
                 1
         );
-        builder.setSpout(ROCKETSPOUT_ID,rocketSpout,3).setNumTasks(2);
+        builder.setSpout(ROCKETSPOUT_ID,rocketSpout,4).setNumTasks(3);
 
 
         //解序列化付款信息,同时查看Tair 来自哪个交易平台
         PayMessageDeserializeBolt payMessageDeserializeBolt =
                 new PayMessageDeserializeBolt();
         builder.setBolt(PAYMENTMESSAGE_DESERIALIZE_BOLT_ID,payMessageDeserializeBolt
-                ,3).setNumTasks(2).shuffleGrouping(ROCKETSPOUT_ID);
+                ,4).setNumTasks(3).allGrouping(ROCKETSPOUT_ID);
 
 
         //计算每分钟不同平台交易额比例的bolt

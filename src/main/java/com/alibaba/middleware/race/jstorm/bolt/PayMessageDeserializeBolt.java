@@ -7,21 +7,16 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
-import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.RaceUtil;
-import com.alibaba.middleware.race.jstorm.Cache.OrderSimpleInfo;
 import com.alibaba.middleware.race.jstorm.Cache.Plat;
 import com.alibaba.middleware.race.jstorm.Cache.PlatInfo;
 import com.alibaba.middleware.race.jstorm.rocket.RocketTuple;
 import com.alibaba.middleware.race.model.PaymentMessage;
-import com.alibaba.middleware.race.tair.TairOperatorImpl;
 import com.alibaba.rocketmq.common.message.MessageExt;
-import com.taobao.tair.DataEntry;
 import org.apache.log4j.Logger;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -167,7 +162,7 @@ class NextTupleThread implements Runnable{
                         StringBuilder sb = new StringBuilder();
                         sb.append("DeserializeLog: get info from  local Cache fail , execute collector's fail function, orderId is : ").append("query local cache Succeed Count: "
                                 + PayMessageDeserializeBolt.queryLocalCacheSucceedCount.get()+ "query local Cache FailCount:  "+ PayMessageDeserializeBolt.queryLocalCacheFailCount.get());
-                        PayMessageDeserializeBolt.LOG.warn(sb.toString());
+                        PayMessageDeserializeBolt.LOG.debug(sb.toString());
                     }else {
                         sendingQueue.offer(paymentMessageWithFailCount);
                     }
