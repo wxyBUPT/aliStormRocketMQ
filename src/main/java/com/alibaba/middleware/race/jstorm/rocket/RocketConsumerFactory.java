@@ -1,14 +1,10 @@
 package com.alibaba.middleware.race.jstorm.rocket;
 
 import com.alibaba.jstorm.utils.JStormUtils;
-import com.alibaba.middleware.race.RaceConfig;
-import com.alibaba.rocketmq.client.MQHelper;
 import com.alibaba.rocketmq.client.consumer.DefaultMQPushConsumer;
 import com.alibaba.rocketmq.client.consumer.listener.MessageListenerConcurrently;
-import com.alibaba.rocketmq.common.consumer.ConsumeFromWhere;
 import org.apache.log4j.Logger;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +29,6 @@ public class RocketConsumerFactory {
         DefaultMQPushConsumer consumer = consumers.get(key);
         if(consumer !=null){
             LOG.info("Consumer of " + key + "has been created,don't recreate it");
-
             return null;
         }
 

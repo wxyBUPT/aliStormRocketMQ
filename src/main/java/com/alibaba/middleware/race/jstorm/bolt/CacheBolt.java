@@ -177,7 +177,6 @@ class NextTupleThread implements Runnable{
 
         while(true){
             try {
-                Thread.sleep(5);
                 PaymentMessageWithFailCount paymentMessageWithFailCount = sendingQueue.take();
                 PaymentMessage paymentMessage = paymentMessageWithFailCount.paymentMessage;
                 Long orderId = paymentMessage.getOrderId();
