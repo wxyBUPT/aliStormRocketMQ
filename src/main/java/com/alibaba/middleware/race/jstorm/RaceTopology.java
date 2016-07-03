@@ -36,7 +36,7 @@ public class RaceTopology {
         //取消ack
         Map conf = new HashMap();
         Config.setNumAckers(conf,0);
-        Config.setNumWorkers(conf,4);
+        Config.setNumWorkers(conf,2);
 
         try {
             StormSubmitter.submitTopology(TOPOLOGY_NAME,conf,builder.createTopology());
@@ -67,7 +67,7 @@ public class RaceTopology {
         CacheBolt cacheBolt=
                 new CacheBolt();
         builder.setBolt(CACHEBOLTID,cacheBolt
-                ,4).setNumTasks(1).shuffleGrouping(ROCKETSPOUT_ID);
+                ,1).setNumTasks(1).shuffleGrouping(ROCKETSPOUT_ID);
 
 
         //计算每分钟不同平台交易额比例的bolt
