@@ -67,7 +67,7 @@ public class RaceTopology {
         CacheBolt cacheBolt=
                 new CacheBolt();
         builder.setBolt(CACHEBOLTID,cacheBolt
-                ,1).setNumTasks(1).shuffleGrouping(ROCKETSPOUT_ID);
+                ,4).setNumTasks(1).shuffleGrouping(ROCKETSPOUT_ID);
 
 
         //计算每分钟不同平台交易额比例的bolt
