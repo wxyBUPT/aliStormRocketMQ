@@ -27,7 +27,7 @@ public class OrderSimpleInfo {
     }
 
     public Boolean isFinish(){
-        if(Math.abs(totalPrice - calculatedPrice) < 0.5){
+        if(Math.abs(totalPrice - calculatedPrice) <= 0.00001){
             return true;
         }else {
             return false;
