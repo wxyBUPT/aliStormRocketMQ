@@ -120,10 +120,10 @@ public class CacheBolt extends BaseRichBolt{
 }
 
 class PlatCache{
-    private ConcurrentHashMap<Long,OrderSimpleInfo> cache ;
+    static private final ConcurrentHashMap<Long,OrderSimpleInfo> cache = new ConcurrentHashMap<Long, OrderSimpleInfo>();
 
     public PlatCache(){
-        cache = new ConcurrentHashMap<Long, OrderSimpleInfo>();
+        
     }
 
     public Plat getPlatAndIncrCalculatedPrice(Long orderId,Double price){
@@ -155,10 +155,9 @@ class PlatCache{
 //用于缓存付款信息
 class PayCache{
 
-    private final ConcurrentHashMap<Long,List<PaymentMessage>> cache;
+    private static final ConcurrentHashMap<Long,List<PaymentMessage>> cache = new ConcurrentHashMap<Long, List<PaymentMessage>>();
 
     public PayCache(){
-        cache = new ConcurrentHashMap<Long, List<PaymentMessage>>();
     }
 
     List<PaymentMessage> getPaymentMessagesByOrderId(Long orderId){
