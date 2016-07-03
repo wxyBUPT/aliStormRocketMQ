@@ -57,7 +57,7 @@ public class RaceTopology {
         RocketSpout rocketSpout = new RocketSpout(
                 allTopic,
                 RaceConfig.MetaConsumerGroup,
-                2
+                1
         );
 
         builder.setSpout(ROCKETSPOUT_ID,rocketSpout,1).setNumTasks(1);
