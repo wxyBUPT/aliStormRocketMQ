@@ -67,16 +67,18 @@ public class RaceTopology {
         CacheBolt cacheBolt=
                 new CacheBolt();
         builder.setBolt(CACHEBOLTID,cacheBolt
-                ,1).setNumTasks(1).shuffleGrouping(ROCKETSPOUT_ID);
+                ,1).setNumTasks(4).shuffleGrouping(ROCKETSPOUT_ID);
 
 
         //计算每分钟不同平台交易额比例的bolt
         MiniuteTbTmTradeBolt miniuteTbTmTradeBolt = new MiniuteTbTmTradeBolt();
-        builder.setBolt(MINIUTETBTMTRADEBOLT_ID,miniuteTbTmTradeBolt,1).shuffleGrouping(CACHEBOLTID);
+        builder.setBolt(MINIUTETBTMTRADEBOLT_ID,miniuteTbTmTradeBolt,1).setNumTasks(3).
+                shuffleGrouping(CACHEBOLTID);
 
         //每分钟不同客户端交易额计算的bolt
         MiniutePcMbTradeBolt miniutePcMbTradeBolt = new MiniutePcMbTradeBolt();
-        builder.setBolt(MINIUTEPCMBTRADEBOLT_ID,miniutePcMbTradeBolt,1).shuffleGrouping(CACHEBOLTID);
+        builder.setBolt(MINIUTEPCMBTRADEBOLT_ID,miniutePcMbTradeBolt,1).setNumTasks(3).
+                shuffleGrouping(CACHEBOLTID);
 
         return builder;
     }

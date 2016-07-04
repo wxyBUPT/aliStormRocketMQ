@@ -33,6 +33,7 @@ public class CacheBolt extends BaseRichBolt{
     private static PayCache payCache;
     protected static AtomicInteger orderCount = new AtomicInteger(0);
     protected static AtomicInteger payCount = new AtomicInteger(0);
+    protected static AtomicInteger cacheCount = new AtomicInteger(0);
 
     //同样将付款信息换粗到
     @Override
@@ -40,6 +41,7 @@ public class CacheBolt extends BaseRichBolt{
         this.collector = outputCollector;
         platCache = new PlatCache();
         payCache = new PayCache();
+        cacheCount.incrementAndGet();
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -51,6 +53,7 @@ public class CacheBolt extends BaseRichBolt{
                     sb.setLength(0);
                     sb.append("OrderCount is : ").append(orderCount.get());
                     sb.append(",  PayCount is : ").append(payCount.get());
+                    sb.append(", CacheCount is : ").append(cacheCount.get());
                     LOG.info(sb.toString());
                     try {
                         Thread.sleep(20000);
