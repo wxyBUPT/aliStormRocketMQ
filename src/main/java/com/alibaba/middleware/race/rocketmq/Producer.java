@@ -21,7 +21,7 @@ import java.util.concurrent.Semaphore;
  */
 public class Producer {
     private static Random rand = new Random();
-    private static int count = 8000;
+    private static int count = 20000000;
 
     /**这是一个消息堆积程序,生成的测试消息模型和比赛的时候的消息模型是一样的
      * 这个程序用来线下测试
@@ -90,7 +90,8 @@ public class Producer {
                                 jedis.set(RaceConfig.PaymentMessageCount,payMessageCount.toString());
                             }
                             System.out.println("分钟 : " + key + "的交易额比例是 : " + ratio);
-                            System.out.println("淘宝订单数为: " + tbOrderCount +"  , 天猫订单数为: " + tmOrderCount + "  ,交易订单数为: " + payMessageCount);
+                            System.out.println("淘宝订单数为: " + tbOrderCount +"  , 天猫订单数为: " + tmOrderCount + "  " +
+                                    ",付款订单数为: " + payMessageCount);
                         }
                     }catch (Exception e){
                         e.printStackTrace();

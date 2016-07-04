@@ -19,6 +19,7 @@ import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import com.alibaba.rocketmq.client.consumer.listener.MessageListenerConcurrently;
 import com.alibaba.rocketmq.common.message.MessageExt;
+import com.alibaba.rocketmq.common.sysflag.SubscriptionSysFlag;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -48,6 +49,7 @@ public class RocketSpout implements IRichSpout,
 
     protected transient LinkedBlockingDeque<PaymentMessage> paymentSendingQueue;
     protected transient LinkedBlockingDeque<OrderSimpleInfo> orderMessageSendingQueue;
+
 
     private final List<String> rocketConsumeTopics;
     private final String rocketConsumeGroup;
@@ -246,8 +248,16 @@ public class RocketSpout implements IRichSpout,
 
     private void consumePaymentMessage(MessageExt messageExt){
         byte[] body = messageExt.getBody();
-        PaymentMessage paymentMessage = RaceUtil.readKryoObject(PaymentMessage.class,body);
-        paymentSendingQueue.offer(paymentMessage);
+        try {
+            PaymentMessage paymentMessage = RaceUtil.readKryoObject(PaymentMessage.class, body);
+            paymentSendingQueue.offer(paymentMessage);
+        }catch (Exception e){
+            if(body.length==2&&body[0]==0&&body[1]==0){
+                LOG.info("Got payment message end signall");
+            }else {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
@@ -261,10 +271,11 @@ public class RocketSpout implements IRichSpout,
                 return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
             }
         }catch (Exception e){
-
+            LOG.info("Got the end from Order Messagesingnall");
         }
 
         try{
+
             for(MessageExt messageExt:list){
                 consumePaymentMessage(messageExt);
             }

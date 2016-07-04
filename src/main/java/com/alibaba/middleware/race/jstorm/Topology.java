@@ -52,7 +52,7 @@ public class Topology {
                 1
         );
 
-        builder.setSpout(ROCKETSPOUT_ID,rocketSpout,4).setNumTasks(4);
+        builder.setSpout(ROCKETSPOUT_ID,rocketSpout,1).setNumTasks(1);
 
 
         System.out.println("我就是想不通");
@@ -60,7 +60,7 @@ public class Topology {
         CacheBolt cacheBolt=
                 new CacheBolt();
         builder.setBolt(CACHEBOLTID,cacheBolt
-                ,4).setNumTasks(1).shuffleGrouping(ROCKETSPOUT_ID);
+                ,1).setNumTasks(4).shuffleGrouping(ROCKETSPOUT_ID);
 
 
         //计算每分钟不同平台交易额比例的bolt

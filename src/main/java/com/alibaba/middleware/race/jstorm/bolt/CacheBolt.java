@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by xiyuanbupt on 7/3/16.
@@ -30,7 +31,8 @@ public class CacheBolt extends BaseRichBolt{
     //用于缓存订单信息
     private static PlatCache platCache ;
     private static PayCache payCache;
-
+    protected static AtomicInteger orderCount = new AtomicInteger(0);
+    protected static AtomicInteger payCount = new AtomicInteger(0);
 
     //同样将付款信息换粗到
     @Override
@@ -38,15 +40,36 @@ public class CacheBolt extends BaseRichBolt{
         this.collector = outputCollector;
         platCache = new PlatCache();
         payCache = new PayCache();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(true){
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("Bolt Cache status:  ").append("OrderCache:  ").append(PlatCache.getCacheInfo());
+                    sb.append("Payment Cache: ").append(PayCache.getCacheInfo());
+                    LOG.info(sb.toString());
+                    sb.setLength(0);
+                    sb.append("OrderCount is : ").append(orderCount.get());
+                    sb.append(",  PayCount is : ").append(payCount.get());
+                    LOG.info(sb.toString());
+                    try {
+                        Thread.sleep(20000);
+                    }catch (Exception e){
+
+                    }
+                }
+            }
+        }).start();
     }
 
     @Override
     public void execute(Tuple tuple) {
-        //接到的tuple 如下 new Values("pay",rocketTuple)
+        //接到的tuple 如下 new Values("pay",paymentMessage)
         // Values("order",orderSimpleInfo)
         // Fields("type","tuple")
         String type = tuple.getStringByField("type");
         if(type.equals("order")){
+            orderCount.incrementAndGet();
             OrderSimpleInfo orderSimpleInfo = (OrderSimpleInfo) tuple.getValueByField("tuple");
             Long orderId = orderSimpleInfo.getOrderId();
             Plat plat = orderSimpleInfo.getPlat();
@@ -71,6 +94,7 @@ public class CacheBolt extends BaseRichBolt{
             platCache.addOrderInfoToCache(orderSimpleInfo);
 
         }else if(type.equals( "pay")){
+            payCount.incrementAndGet();
             PaymentMessage paymentMessage = (PaymentMessage)tuple.getValueByField("tuple");
             Long orderId = paymentMessage.getOrderId();
             Double payAmount = paymentMessage.getPayAmount();
@@ -138,6 +162,16 @@ class PlatCache{
     public String toString(){
         return cache.toString();
     }
+
+    public static String getCacheInfo(){
+        StringBuilder sb = new StringBuilder();
+        sb.append("Plat Cache size is : " + cache.size()).append("   ,");
+        return sb.toString();
+    }
+
+    public static boolean isEmpty(){
+        return cache.size() == 0;
+    }
 }
 
 //用于缓存付款信息
@@ -174,5 +208,15 @@ class PayCache{
     @Override
     public String toString(){
         return cache.toString();
+    }
+
+    public static String getCacheInfo(){
+        StringBuilder sb = new StringBuilder();
+        sb.append("PayCache size is : " + cache.size()).append("   ,");
+        return sb.toString();
+    }
+
+    public static boolean isEmpty(){
+        return cache.size() == 0;
     }
 }
