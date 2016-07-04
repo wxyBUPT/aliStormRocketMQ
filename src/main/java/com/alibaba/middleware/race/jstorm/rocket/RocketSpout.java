@@ -87,8 +87,8 @@ public class RocketSpout implements IRichSpout,
         this.conf = conf;
         this.collector = spoutOutputCollector;
         this.id = topologyContext.getThisComponentId() + ":" + topologyContext.getThisTaskId();
-        this.paymentSendingQueue= new LinkedBlockingDeque<PaymentMessage>();
-        this.orderMessageSendingQueue = new LinkedBlockingDeque<OrderSimpleInfo>();
+        this.paymentSendingQueue= new LinkedBlockingDeque<PaymentMessage>(8000);
+        this.orderMessageSendingQueue = new LinkedBlockingDeque<OrderSimpleInfo>(8000);
 
         rocketClientConfig = new RocketClientConfig(this.rocketConsumeGroup,this.rocketConsumeTopics
         ,this.subExp);
