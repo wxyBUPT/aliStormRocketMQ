@@ -87,8 +87,8 @@ public class RocketSpout implements IRichSpout,
         this.conf = conf;
         this.collector = spoutOutputCollector;
         this.id = topologyContext.getThisComponentId() + ":" + topologyContext.getThisTaskId();
-        this.paymentSendingQueue= new LinkedBlockingDeque<PaymentMessage>(8000);
-        this.orderMessageSendingQueue = new LinkedBlockingDeque<OrderSimpleInfo>(8000);
+        this.paymentSendingQueue= new LinkedBlockingDeque<PaymentMessage>(100);
+        this.orderMessageSendingQueue = new LinkedBlockingDeque<OrderSimpleInfo>(800);
 
         rocketClientConfig = new RocketClientConfig(this.rocketConsumeGroup,this.rocketConsumeTopics
         ,this.subExp);
@@ -182,14 +182,14 @@ public class RocketSpout implements IRichSpout,
     public void nextTuple() {
         //首先取出订单信息,取出是个订单信息,然后发送出去
         List<OrderSimpleInfo> orderSimpleInfoList = new ArrayList<OrderSimpleInfo>();
-        orderMessageSendingQueue.drainTo(orderSimpleInfoList,10);
+        orderMessageSendingQueue.drainTo(orderSimpleInfoList,5);
         for(OrderSimpleInfo orderSimpleInfo:orderSimpleInfoList){
             sendOrderMessage(orderSimpleInfo);
         }
 
         List<PaymentMessage> paymentMessages = new ArrayList<PaymentMessage>();
         //付款信息每一次少取一点,因为最好要先消费好订单信息
-        paymentSendingQueue.drainTo(paymentMessages,10);
+        paymentSendingQueue.drainTo(paymentMessages,5);
         for(PaymentMessage paymentMessage:paymentMessages){
             sendPayMessage(paymentMessage);
         }

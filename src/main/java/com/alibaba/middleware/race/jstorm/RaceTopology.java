@@ -60,14 +60,14 @@ public class RaceTopology {
                 1
         );
 
-        builder.setSpout(ROCKETSPOUT_ID,rocketSpout,4).setNumTasks(4);
+        builder.setSpout(ROCKETSPOUT_ID,rocketSpout,3).setNumTasks(3);
 
 
         //解序列化付款信息,同时查看Tair 来自哪个交易平台
         CacheBolt cacheBolt=
                 new CacheBolt();
         builder.setBolt(CACHEBOLTID,cacheBolt
-                ,1).setNumTasks(4).shuffleGrouping(ROCKETSPOUT_ID);
+                ,1).setNumTasks(2).shuffleGrouping(ROCKETSPOUT_ID);
 
 
         //计算每分钟不同平台交易额比例的bolt
