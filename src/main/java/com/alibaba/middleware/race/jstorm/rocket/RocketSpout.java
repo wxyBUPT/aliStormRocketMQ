@@ -169,10 +169,12 @@ public class RocketSpout implements IRichSpout,
     }
 
     private void sendPayMessage(PaymentMessage paymentMessage){
+        if(paymentMessage==null)return;
         collector.emit(new Values("pay",paymentMessage));
     }
 
     private void sendOrderMessage(OrderSimpleInfo orderSimpleInfo){
+        if(orderSimpleInfo==null)return;
         collector.emit(new Values("order",orderSimpleInfo));
     }
 
