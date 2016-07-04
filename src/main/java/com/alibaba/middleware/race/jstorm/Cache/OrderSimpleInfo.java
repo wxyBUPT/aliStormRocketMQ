@@ -1,10 +1,12 @@
 package com.alibaba.middleware.race.jstorm.Cache;
 
+import java.io.Serializable;
+
 /**
  * Created by xiyuanbupt on 6/29/16.
  * 用于存储 Order 简单信息
  */
-public class OrderSimpleInfo {
+public class OrderSimpleInfo implements Serializable{
 
     public OrderSimpleInfo(Plat plat,Double totalPrice,Long orderId){
         this.plat = plat;
