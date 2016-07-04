@@ -13,6 +13,7 @@ import com.alibaba.middleware.race.RaceUtil;
 import com.alibaba.middleware.race.jstorm.Cache.OrderSimpleInfo;
 import com.alibaba.middleware.race.jstorm.Cache.Plat;
 import com.alibaba.middleware.race.model.OrderMessage;
+import com.alibaba.middleware.race.model.PaymentMessage;
 import com.alibaba.rocketmq.client.consumer.DefaultMQPushConsumer;
 import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
@@ -45,7 +46,7 @@ public class RocketSpout implements IRichSpout,
     protected Map conf;
     protected String id;
 
-    protected transient LinkedBlockingDeque<RocketTuple> paymentSendingQueue;
+    protected transient LinkedBlockingDeque<PaymentMessage> paymentSendingQueue;
     protected transient LinkedBlockingDeque<OrderSimpleInfo> orderMessageSendingQueue;
 
     private final List<String> rocketConsumeTopics;
@@ -84,13 +85,8 @@ public class RocketSpout implements IRichSpout,
         this.conf = conf;
         this.collector = spoutOutputCollector;
         this.id = topologyContext.getThisComponentId() + ":" + topologyContext.getThisTaskId();
-        this.paymentSendingQueue= new LinkedBlockingDeque<RocketTuple>();
+        this.paymentSendingQueue= new LinkedBlockingDeque<PaymentMessage>();
         this.orderMessageSendingQueue = new LinkedBlockingDeque<OrderSimpleInfo>();
-
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("Begin to init MqSpout:").append(id);
-        LOG.info(sb.toString());
 
         rocketClientConfig = new RocketClientConfig(this.rocketConsumeGroup,this.rocketConsumeTopics
         ,this.subExp);
@@ -170,8 +166,8 @@ public class RocketSpout implements IRichSpout,
         }
     }
 
-    private void sendPayMessage(RocketTuple rocketTuple){
-        collector.emit(new Values("pay",rocketTuple));
+    private void sendPayMessage(PaymentMessage paymentMessage){
+        collector.emit(new Values("pay",paymentMessage));
     }
 
     private void sendOrderMessage(OrderSimpleInfo orderSimpleInfo){
@@ -187,11 +183,11 @@ public class RocketSpout implements IRichSpout,
             sendOrderMessage(orderSimpleInfo);
         }
 
-        List<RocketTuple> rocketTuples = new ArrayList<RocketTuple>();
+        List<PaymentMessage> paymentMessages = new ArrayList<PaymentMessage>();
         //付款信息每一次少取一点,因为最好要先消费好订单信息
-        paymentSendingQueue.drainTo(rocketTuples,10);
-        for(RocketTuple rocketTuple:rocketTuples){
-            sendPayMessage(rocketTuple);
+        paymentSendingQueue.drainTo(paymentMessages,10);
+        for(PaymentMessage paymentMessage:paymentMessages){
+            sendPayMessage(paymentMessage);
         }
     }
 
@@ -248,12 +244,18 @@ public class RocketSpout implements IRichSpout,
         orderMessageSendingQueue.offer(orderSimpleInfo);
     }
 
+    private void consumePaymentMessage(MessageExt messageExt){
+        byte[] body = messageExt.getBody();
+        PaymentMessage paymentMessage = RaceUtil.readKryoObject(PaymentMessage.class,body);
+        paymentSendingQueue.offer(paymentMessage);
+    }
+
     @Override
     public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> list, ConsumeConcurrentlyContext consumeConcurrentlyContext) {
 
         try{
-            //如果是订单信息,则将订单信息解序列化,并添加到缓冲队列里面去
             MessageExt messageExt = list.get(0);
+            //如果是订单信息,则将订单信息解序列化,并添加到缓冲队列里面去
             if(!messageExt.getTopic().equals(RaceConfig.MqPayTopic)){
                 consumeOrderMessage(list);
                 return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
@@ -263,9 +265,9 @@ public class RocketSpout implements IRichSpout,
         }
 
         try{
-
-            RocketTuple rocketTuple = new RocketTuple(list,consumeConcurrentlyContext.getMessageQueue());
-            paymentSendingQueue.offer(rocketTuple);
+            for(MessageExt messageExt:list){
+                consumePaymentMessage(messageExt);
+            }
             return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
 
         }catch (Exception e){

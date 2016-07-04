@@ -7,12 +7,9 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
-import com.alibaba.middleware.race.RaceUtil;
 import com.alibaba.middleware.race.jstorm.Cache.OrderSimpleInfo;
 import com.alibaba.middleware.race.jstorm.Cache.Plat;
-import com.alibaba.middleware.race.jstorm.rocket.RocketTuple;
 import com.alibaba.middleware.race.model.PaymentMessage;
-import com.alibaba.rocketmq.common.message.MessageExt;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -74,36 +71,27 @@ public class CacheBolt extends BaseRichBolt{
             platCache.addOrderInfoToCache(orderSimpleInfo);
 
         }else if(type.equals( "pay")){
-            RocketTuple rocketTuple = (RocketTuple) tuple.getValueByField("tuple");
-            List<MessageExt> messageExtList = rocketTuple.getMsgList();
-            for(MessageExt messageExt:messageExtList){
-                byte[] body = messageExt.getBody();
-                if(body.length == 2 && body[0] == 0 && body[1] == 0){
-                    continue;
-                }
-                PaymentMessage paymentMessage = RaceUtil.readKryoObject(PaymentMessage.class,body);
-                Long orderId = paymentMessage.getOrderId();
-                Double payAmount = paymentMessage.getPayAmount();
-                Plat plat = platCache.getPlatAndIncrCalculatedPrice(orderId,payAmount);
+            PaymentMessage paymentMessage = (PaymentMessage)tuple.getValueByField("tuple");
+            Long orderId = paymentMessage.getOrderId();
+            Double payAmount = paymentMessage.getPayAmount();
+            Plat plat = platCache.getPlatAndIncrCalculatedPrice(orderId,payAmount);
 
-                if(plat != null){
-                    Long createTime = paymentMessage.getCreateTime();
-                    Long minuteTime = (createTime/1000/60)*60;
-                    short plat_pc_mb = paymentMessage.getPayPlatform();
-                    String plat_tm_tb;
-                    if(plat == Plat.TAOBAO){
-                        plat_tm_tb = "tb";
-                    }else {
-                        plat_tm_tb = "tm";
-                    }
-                    this.collector.emit(new Values(
-                            plat_tm_tb,plat_pc_mb,minuteTime,payAmount
-                    ));
+            if(plat != null){
+                Long createTime = paymentMessage.getCreateTime();
+                Long minuteTime = (createTime/1000/60)*60;
+                short plat_pc_mb = paymentMessage.getPayPlatform();
+                String plat_tm_tb;
+                if(plat == Plat.TAOBAO){
+                    plat_tm_tb = "tb";
                 }else {
-                    payCache.cachePaymentMessage(paymentMessage);
+                    plat_tm_tb = "tm";
                 }
+                this.collector.emit(new Values(
+                        plat_tm_tb,plat_pc_mb,minuteTime,payAmount
+                ));
+            }else {
+                payCache.cachePaymentMessage(paymentMessage);
             }
-
         }else {
             LOG.error("Neither order message nor pay message");
         }
