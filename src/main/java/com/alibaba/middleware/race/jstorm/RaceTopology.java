@@ -57,7 +57,7 @@ public class RaceTopology {
         RocketSpout rocketSpout = new RocketSpout(
                 allTopic,
                 RaceConfig.MetaConsumerGroup,
-                6
+                4
         );
 
         builder.setSpout(ROCKETSPOUT_ID,rocketSpout,3).setNumTasks(3);
@@ -67,8 +67,7 @@ public class RaceTopology {
         CacheBolt cacheBolt=
                 new CacheBolt();
         builder.setBolt(CACHEBOLTID,cacheBolt
-                ,1).setNumTasks(5).shuffleGrouping(ROCKETSPOUT_ID);
-
+                ,1).setNumTasks(1).shuffleGrouping(ROCKETSPOUT_ID);
 
         //计算每分钟不同平台交易额比例的bolt
         MiniuteTbTmTradeBolt miniuteTbTmTradeBolt = new MiniuteTbTmTradeBolt();
