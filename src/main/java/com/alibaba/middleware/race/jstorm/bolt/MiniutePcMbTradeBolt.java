@@ -60,7 +60,8 @@ public class MiniutePcMbTradeBolt extends BaseRichBolt{
             mbMiniuteTrade += payAmount;
             this.mbMiniuteTrades.put(minuteTime,mbMiniuteTrade);
             this.collector.emit(new Values(1,minuteTime,mbMiniuteTrade));
-        }else {
+        }else if(plat_pc_mb == 3){
+        }else  {
             LOG.error("Trade plat form is neither pc nor wireless" + plat_pc_mb);
         }
     }

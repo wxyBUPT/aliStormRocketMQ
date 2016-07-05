@@ -79,7 +79,7 @@ public class CacheBolt extends BaseRichBolt{
                 for(PaymentMessage paymentMessage:paymentMessages){
                     Long createTime = paymentMessage.getCreateTime();
                     Long minuteTime = (createTime/1000/60) * 60;
-                    short plat_pc_mb = paymentMessage.getPayPlatform();
+                    short plat_pc_mb = (short)3;
                     Double payAmount = paymentMessage.getPayAmount();
                     String plat_tm_tb ;
                     if(plat == Plat.TAOBAO){
@@ -98,14 +98,14 @@ public class CacheBolt extends BaseRichBolt{
         }else if(type.equals( "pay")){
             payCount.incrementAndGet();
             PaymentMessage paymentMessage = (PaymentMessage)tuple.getValueByField("tuple");
+            sendPaymentMessageToPcMb(paymentMessage);
             Long orderId = paymentMessage.getOrderId();
             Double payAmount = paymentMessage.getPayAmount();
             Plat plat = platCache.getPlatAndIncrCalculatedPrice(orderId,payAmount);
-
             if(plat != null){
                 Long createTime = paymentMessage.getCreateTime();
                 Long minuteTime = (createTime/1000/60)*60;
-                short plat_pc_mb = paymentMessage.getPayPlatform();
+                short plat_pc_mb = (short)3;
                 String plat_tm_tb;
                 if(plat == Plat.TAOBAO){
                     plat_tm_tb = "tb";
@@ -122,6 +122,17 @@ public class CacheBolt extends BaseRichBolt{
             LOG.error("Neither order message nor pay message");
         }
 
+    }
+
+    void sendPaymentMessageToPcMb(PaymentMessage paymentMessage){
+        Long createTime = paymentMessage.getCreateTime();
+        Long minuteTime = (createTime/1000/60)*60;
+        short plat_pc_mb = paymentMessage.getPayPlatform();
+        Double payAmount = paymentMessage.getPayAmount();
+        String plat_tm_tb = "*";
+        this.collector.emit(new Values(
+                plat_tm_tb,plat_pc_mb,minuteTime,payAmount
+        ));
     }
 
     @Override

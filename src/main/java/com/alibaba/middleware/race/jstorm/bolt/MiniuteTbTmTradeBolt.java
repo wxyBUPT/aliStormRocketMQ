@@ -63,7 +63,10 @@ public class MiniuteTbTmTradeBolt extends BaseRichBolt {
             tmMiniuteTrade += payAmount;
             this.tmMiniuteTrades.put(minuteTime,tmMiniuteTrade);
             this.collector.emit(new Values(RaceConfig.prex_tmall,minuteTime,tmMiniuteTrade));
-        }else {
+        }else if(plat_tm_tb.equals("*")){
+            
+        }
+        else {
             LOG.error("MiniuteTbTmTradeBoltLog: platform neither tm nor tb");
         }
         //为了调试写 error日志
