@@ -35,7 +35,7 @@ public class ReportPcMbRatioThread implements Runnable{
         HashMap<Long,Double> pcMiniuteTotalTrades = miniuteTrades2miniuteTotalTradesmap(this.pcMiniuteTrades);
         HashMap<Long,Double> mbMiniuteTotalTrades = miniuteTrades2miniuteTotalTradesmap(this.mbMiniuteTrades);
         StringBuilder sb = new StringBuilder();
-        sb.append("移动端和pc 端的交易比例为: ");
+        sb.append("miniutes Count is " + pcMiniuteTotalTrades.size());
         long minMiniute,maxMiniute;
         minMiniute = getMapMinKey(pcMiniuteTotalTrades);
         maxMiniute = getMapMaxKey(pcMiniuteTotalTrades);
@@ -60,8 +60,6 @@ public class ReportPcMbRatioThread implements Runnable{
 
             }
             try {
-                sb.append(RaceConfig.prex_ratio + currentMiniute + " : " + ratio);
-                sb.append("   ,  ");
                 String key = RaceConfig.prex_ratio + currentMiniute;
                 tairOperator.write(key, ratio);
             }catch (Exception e){
