@@ -62,11 +62,7 @@ public class ReportTbTmTradeThread implements Runnable {
             }catch (Exception e){
             }
             try {
-                DataEntry tairEntry = tairOperator.get(key);
-                Thread.sleep(2);
-                if(value  >= (Double)tairEntry.getValue()){
-                    tairOperator.write(key,value);
-                }
+                tairOperator.write(key,value);
             }catch (Exception e){
                 LOG.error("Key: " + key + " has not been writen to Tair , value is : " + value );
                 LOG.trace(e.getStackTrace());
