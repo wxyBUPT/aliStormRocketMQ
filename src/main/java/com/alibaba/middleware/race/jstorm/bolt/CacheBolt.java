@@ -33,8 +33,8 @@ public class CacheBolt extends BaseRichBolt{
     //用于缓存订单信息
     private static PlatCache platCache ;
     private static PayCache payCache;
-    protected static AtomicInteger orderCount = new AtomicInteger(0);
-    protected static AtomicInteger payCount = new AtomicInteger(0);
+    protected AtomicInteger orderCount;
+    protected AtomicInteger payCount ;
 
     //同样将付款信息换粗到
     @Override
@@ -42,6 +42,8 @@ public class CacheBolt extends BaseRichBolt{
         this.collector = outputCollector;
         platCache = new PlatCache();
         payCache = new PayCache();
+        payCount = new AtomicInteger(0);
+        orderCount = new AtomicInteger(0);
         //new Thread(new ClearThread(collector,payCache,platCache)).start();
         new Thread(new Runnable() {
             @Override

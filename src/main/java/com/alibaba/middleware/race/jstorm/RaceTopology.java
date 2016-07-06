@@ -57,22 +57,22 @@ public class RaceTopology {
         RocketSpout rocketSpout = new RocketSpout(
                 allTopic,
                 RaceConfig.MetaConsumerGroup,
-                16
+                6
         );
-        builder.setSpout(ROCKETSPOUT_ID,rocketSpout,4).setNumTasks(6);
+        builder.setSpout(ROCKETSPOUT_ID,rocketSpout,4).setNumTasks(4);
 
         MiniutePcMbTradeBolt miniutePcMbTradeBolt = new MiniutePcMbTradeBolt();
-        builder.setBolt(MINIUTEPCMBTRADEBOLT_ID,miniutePcMbTradeBolt,1).setNumTasks(4).shuffleGrouping(ROCKETSPOUT_ID);
+        builder.setBolt(MINIUTEPCMBTRADEBOLT_ID,miniutePcMbTradeBolt,1).setNumTasks(6).shuffleGrouping(ROCKETSPOUT_ID);
 
         //解序列化付款信息,同时查看Tair 来自哪个交易平台
         CacheBolt cacheBolt=
                 new CacheBolt();
         builder.setBolt(CACHEBOLTID,cacheBolt
-                ,9).setNumTasks(9).fieldsGrouping(ROCKETSPOUT_ID,new Fields("orderId"));
+                ,10).setNumTasks(10).fieldsGrouping(ROCKETSPOUT_ID,new Fields("orderId"));
 
         //计算每分钟不同平台交易额比例的bolt
         MiniuteTbTmTradeBolt miniuteTbTmTradeBolt = new MiniuteTbTmTradeBolt();
-        builder.setBolt(MINIUTETBTMTRADEBOLT_ID,miniuteTbTmTradeBolt,1).setNumTasks(4).
+        builder.setBolt(MINIUTETBTMTRADEBOLT_ID,miniuteTbTmTradeBolt,1).setNumTasks(6).
                 shuffleGrouping(CACHEBOLTID);
 
         return builder;

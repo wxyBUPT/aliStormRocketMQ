@@ -186,14 +186,14 @@ public class RocketSpout implements IRichSpout,
     public void nextTuple() {
         //首先取出订单信息,取出是个订单信息,然后发送出去
         List<OrderSimpleInfo> orderSimpleInfoList = new ArrayList<OrderSimpleInfo>();
-        orderMessageSendingQueue.drainTo(orderSimpleInfoList,3);
+        orderMessageSendingQueue.drainTo(orderSimpleInfoList,1);
         for(OrderSimpleInfo orderSimpleInfo:orderSimpleInfoList){
             sendOrderMessage(orderSimpleInfo);
         }
 
         List<PaymentMessage> paymentMessages = new ArrayList<PaymentMessage>();
         //付款信息每一次少取一点,因为最好要先消费好订单信息
-        paymentSendingQueue.drainTo(paymentMessages,3);
+        paymentSendingQueue.drainTo(paymentMessages,1);
         for(PaymentMessage paymentMessage:paymentMessages){
             sendPayMessage(paymentMessage);
         }
