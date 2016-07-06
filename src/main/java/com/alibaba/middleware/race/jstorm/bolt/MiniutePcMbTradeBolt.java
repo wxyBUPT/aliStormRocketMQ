@@ -8,6 +8,7 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import com.alibaba.middleware.race.jstorm.bolt.forUpdateTair.ReportPcMbRatioThread;
+import com.alibaba.middleware.race.model.PaymentMessage;
 import org.apache.log4j.Logger;
 
 import java.util.Map;
@@ -37,10 +38,13 @@ public class MiniutePcMbTradeBolt extends BaseRichBolt{
 
     @Override
     public void execute(Tuple tuple) {
-        Short plat_pc_mb = tuple.getShortByField("plat_pc_mb");
-        long minuteTime = tuple.getLongByField("minuteTime");
-
-        double payAmount = tuple.getDoubleByField("payAmount");
+        String type = tuple.getStringByField("type");
+        if(type.equals("order"))return;
+        PaymentMessage paymentMessage = (PaymentMessage)tuple.getValueByField("class");
+        Short plat_pc_mb = paymentMessage.getPayPlatform();
+        Long createTime = paymentMessage.getCreateTime();
+        Long minuteTime = (createTime/1000/60) * 60;
+        double payAmount = paymentMessage.getPayAmount();
         //0 代表pc 交易
         if(plat_pc_mb == 0){
             //对pc 端的交易额进行计算
@@ -60,8 +64,7 @@ public class MiniutePcMbTradeBolt extends BaseRichBolt{
             mbMiniuteTrade += payAmount;
             this.mbMiniuteTrades.put(minuteTime,mbMiniuteTrade);
             this.collector.emit(new Values(1,minuteTime,mbMiniuteTrade));
-        }else if(plat_pc_mb == 3){
-        }else  {
+        } else  {
             LOG.error("Trade plat form is neither pc nor wireless" + plat_pc_mb);
         }
     }

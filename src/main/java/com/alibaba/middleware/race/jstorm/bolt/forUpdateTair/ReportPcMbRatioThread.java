@@ -17,7 +17,6 @@ public class ReportPcMbRatioThread implements Runnable{
 
     ConcurrentHashMap<Long,Double> pcMiniuteTrades;
     ConcurrentHashMap<Long,Double> mbMiniuteTrades;
-    ConcurrentHashMap<Long,Double> mbPcRatio;
 
     private TairOperatorImpl tairOperator = null;
 

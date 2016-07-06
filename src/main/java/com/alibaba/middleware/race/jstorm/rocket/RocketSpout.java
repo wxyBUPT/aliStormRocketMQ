@@ -74,7 +74,9 @@ public class RocketSpout implements IRichSpout,
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-        outputFieldsDeclarer.declare(new Fields("type","tuple"));
+        //type == "pay" or type == "order"
+        //class == orderSimpleInfo or class == paymentMessage
+        outputFieldsDeclarer.declare(new Fields("orderId","type","class"));
     }
 
     @Override
@@ -170,12 +172,14 @@ public class RocketSpout implements IRichSpout,
 
     private void sendPayMessage(PaymentMessage paymentMessage){
         if(paymentMessage==null)return;
-        collector.emit(new Values("pay",paymentMessage));
+        Long orderId = paymentMessage.getOrderId();
+        collector.emit(new Values(orderId,"pay",paymentMessage));
     }
 
     private void sendOrderMessage(OrderSimpleInfo orderSimpleInfo){
         if(orderSimpleInfo==null)return;
-        collector.emit(new Values("order",orderSimpleInfo));
+        Long orderId = orderSimpleInfo.getOrderId();
+        collector.emit(new Values(orderId,"order",orderSimpleInfo));
     }
 
     @Override

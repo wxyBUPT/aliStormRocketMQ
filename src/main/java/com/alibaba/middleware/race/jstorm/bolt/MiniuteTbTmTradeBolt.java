@@ -43,10 +43,6 @@ public class MiniuteTbTmTradeBolt extends BaseRichBolt {
         String plat_tm_tb = tuple.getStringByField("plat_tm_tb");
         long minuteTime = tuple.getLongByField("minuteTime");
         double payAmount = tuple.getDoubleByField("payAmount");
-        StringBuilder sb = new StringBuilder();
-        sb.append("得到平台信息和分钟信息");
-        sb.append("平台信息是: ").append(plat_tm_tb);
-        LOG.debug(sb.toString());
         if(plat_tm_tb.equals("tb") ){
             Double tbMiniuteTrade = tbMiniuteTrades.get(minuteTime);
             if(tbMiniuteTrade == null){
@@ -63,28 +59,9 @@ public class MiniuteTbTmTradeBolt extends BaseRichBolt {
             tmMiniuteTrade += payAmount;
             this.tmMiniuteTrades.put(minuteTime,tmMiniuteTrade);
             this.collector.emit(new Values(RaceConfig.prex_tmall,minuteTime,tmMiniuteTrade));
-        }else if(plat_tm_tb.equals("*")){
-            
-        }
-        else {
+        } else {
             LOG.error("MiniuteTbTmTradeBoltLog: platform neither tm nor tb");
         }
-        //为了调试写 error日志
-
-        //try {
-        //    OutputStream f = new FileOutputStream("./forDebug.txt");
-        //    OutputStreamWriter writer = new OutputStreamWriter(f,"utf-8");
-        //    StringBuilder sb = new StringBuilder();
-        //    sb.append("得到平台信息和分钟信息");
-        //    sb.append("plat_tm_tb:  ").append(plat_tm_tb);
-        //    sb.append("minuteTime : ").append(minuteTime);
-        //    writer.append("得到平台信息和分钟信息\r\n");
-        //    writer.append(sb.toString());
-        //    writer.close();
-        //    f.close();
-        //}catch (Exception e){
-        //    e.printStackTrace();
-        //}
     }
 
     @Override

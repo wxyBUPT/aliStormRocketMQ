@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by xiyuanbupt on 7/3/16.
+ * 使用storm 的fields grouping 可以保证相同的orderId 缓存到同一个Cache bolt 中去
  */
 public class CacheBolt extends BaseRichBolt{
 
@@ -41,14 +42,14 @@ public class CacheBolt extends BaseRichBolt{
         this.collector = outputCollector;
         platCache = new PlatCache();
         payCache = new PayCache();
-        new Thread(new ClearThread(collector,payCache,platCache)).start();
+        //new Thread(new ClearThread(collector,payCache,platCache)).start();
         new Thread(new Runnable() {
             @Override
             public void run() {
                 while(true){
                     StringBuilder sb = new StringBuilder();
-                    sb.append("Bolt Cache status:  ").append("OrderCache:  ").append(PlatCache.getCacheInfo());
-                    sb.append("Payment Cache: ").append(PayCache.getCacheInfo());
+                    sb.append("Bolt Cache status:  ").append("OrderCache:  ").append(platCache.getCacheInfo());
+                    sb.append("Payment Cache: ").append(payCache.getCacheInfo());
                     LOG.info(sb.toString());
                     sb.setLength(0);
                     sb.append("OrderCount is : ").append(orderCount.get());
@@ -72,7 +73,7 @@ public class CacheBolt extends BaseRichBolt{
         String type = tuple.getStringByField("type");
         if(type.equals("order")){
             orderCount.incrementAndGet();
-            OrderSimpleInfo orderSimpleInfo = (OrderSimpleInfo) tuple.getValueByField("tuple");
+            OrderSimpleInfo orderSimpleInfo = (OrderSimpleInfo) tuple.getValueByField("class");
             Long orderId = orderSimpleInfo.getOrderId();
             Plat plat = orderSimpleInfo.getPlat();
             //查看PayCache中是否有订单
@@ -81,7 +82,6 @@ public class CacheBolt extends BaseRichBolt{
                 for(PaymentMessage paymentMessage:paymentMessages){
                     Long createTime = paymentMessage.getCreateTime();
                     Long minuteTime = (createTime/1000/60) * 60;
-                    short plat_pc_mb = (short)3;
                     Double payAmount = paymentMessage.getPayAmount();
                     String plat_tm_tb ;
                     if(plat == Plat.TAOBAO){
@@ -89,7 +89,7 @@ public class CacheBolt extends BaseRichBolt{
                     }else {
                         plat_tm_tb = "tm";
                     }
-                    this.collector.emit(new Values(plat_tm_tb,plat_pc_mb,minuteTime,payAmount));
+                    this.collector.emit(new Values(plat_tm_tb,minuteTime,payAmount));
                     orderSimpleInfo.incrCalculatedPrice(payAmount);
                 }
             }
@@ -99,15 +99,13 @@ public class CacheBolt extends BaseRichBolt{
 
         }else if(type.equals( "pay")){
             payCount.incrementAndGet();
-            PaymentMessage paymentMessage = (PaymentMessage)tuple.getValueByField("tuple");
-            sendPaymentMessageToPcMb(paymentMessage);
+            PaymentMessage paymentMessage = (PaymentMessage)tuple.getValueByField("class");
             Long orderId = paymentMessage.getOrderId();
             Double payAmount = paymentMessage.getPayAmount();
             Plat plat = platCache.getPlatAndIncrCalculatedPrice(orderId,payAmount);
             if(plat != null){
                 Long createTime = paymentMessage.getCreateTime();
                 Long minuteTime = (createTime/1000/60)*60;
-                short plat_pc_mb = (short)3;
                 String plat_tm_tb;
                 if(plat == Plat.TAOBAO){
                     plat_tm_tb = "tb";
@@ -115,7 +113,7 @@ public class CacheBolt extends BaseRichBolt{
                     plat_tm_tb = "tm";
                 }
                 this.collector.emit(new Values(
-                        plat_tm_tb,plat_pc_mb,minuteTime,payAmount
+                        plat_tm_tb,minuteTime,payAmount
                 ));
             }else {
                 payCache.cachePaymentMessage(paymentMessage);
@@ -126,31 +124,19 @@ public class CacheBolt extends BaseRichBolt{
 
     }
 
-    void sendPaymentMessageToPcMb(PaymentMessage paymentMessage){
-        Long createTime = paymentMessage.getCreateTime();
-        Long minuteTime = (createTime/1000/60)*60;
-        short plat_pc_mb = paymentMessage.getPayPlatform();
-        Double payAmount = paymentMessage.getPayAmount();
-        String plat_tm_tb = "*";
-        this.collector.emit(new Values(
-                plat_tm_tb,plat_pc_mb,minuteTime,payAmount
-        ));
-    }
-
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
         outputFieldsDeclarer.declare(new Fields("plat_tm_tb",
-                "plat_pc_mb",
                 "minuteTime",
                 "payAmount"));
     }
 }
 
 class PlatCache{
-    static private final ConcurrentHashMap<Long,OrderSimpleInfo> cache = new ConcurrentHashMap<Long, OrderSimpleInfo>();
+    private ConcurrentHashMap<Long,OrderSimpleInfo> cache = new ConcurrentHashMap<Long, OrderSimpleInfo>();
 
     public PlatCache(){
-
+        cache = new ConcurrentHashMap<Long, OrderSimpleInfo>();
     }
 
     public Plat getPlatAndIncrCalculatedPrice(Long orderId,Double price){
@@ -180,27 +166,28 @@ class PlatCache{
         return cache.toString();
     }
 
-    public static String getCacheInfo(){
+    public String getCacheInfo(){
         StringBuilder sb = new StringBuilder();
         sb.append("Plat Cache size is : " + cache.size()).append("   ,");
         return sb.toString();
     }
 
-    public static boolean isEmpty(){
+    public boolean isEmpty(){
         return cache.size() == 0;
     }
 
     boolean isOrderCome(Long orderId){
-        return cache.contains(orderId);
+        return cache.keySet().contains(orderId);
     }
 }
 
 //用于缓存付款信息
 class PayCache{
 
-    private static final ConcurrentHashMap<Long,List<PaymentMessage>> cache = new ConcurrentHashMap<Long, List<PaymentMessage>>();
+    private ConcurrentHashMap<Long,List<PaymentMessage>> cache = new ConcurrentHashMap<Long, List<PaymentMessage>>();
 
     public PayCache(){
+        cache = new ConcurrentHashMap<Long, List<PaymentMessage>>();
     }
 
     List<PaymentMessage> getPaymentMessagesByOrderId(Long orderId){
@@ -231,13 +218,13 @@ class PayCache{
         return cache.toString();
     }
 
-    public static String getCacheInfo(){
+    public String getCacheInfo(){
         StringBuilder sb = new StringBuilder();
         sb.append("PayCache size is : " + cache.size()).append("   ,");
         return sb.toString();
     }
 
-    public static boolean isEmpty(){
+    public boolean isEmpty(){
         return cache.size() == 0;
     }
 

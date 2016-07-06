@@ -3,6 +3,7 @@ package com.alibaba.middleware.race.jstorm;
 import backtype.storm.Config;
 import backtype.storm.StormSubmitter;
 import backtype.storm.topology.TopologyBuilder;
+import backtype.storm.tuple.Fields;
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.jstorm.bolt.CacheBolt;
 import com.alibaba.middleware.race.jstorm.bolt.MiniutePcMbTradeBolt;
@@ -27,7 +28,6 @@ public class RaceTopology {
     private static String CACHEBOLTID = "cacheBolt";
     private static String MINIUTETBTMTRADEBOLT_ID = "miniuteTbTmTradeBolt" ;
     private static String MINIUTEPCMBTRADEBOLT_ID = "miniutePcMbTradeBolt";
-    private static Logger LOG = LoggerFactory.getLogger(Topology.class);
 
     public static void main(String[] args) throws Exception{
 
@@ -59,24 +59,20 @@ public class RaceTopology {
                 RaceConfig.MetaConsumerGroup,
                 8
         );
+        builder.setSpout(ROCKETSPOUT_ID,rocketSpout,4).setNumTasks(6);
 
-        builder.setSpout(ROCKETSPOUT_ID,rocketSpout,3).setNumTasks(3);
-
+        MiniutePcMbTradeBolt miniutePcMbTradeBolt = new MiniutePcMbTradeBolt();
+        builder.setBolt(MINIUTEPCMBTRADEBOLT_ID,miniutePcMbTradeBolt,1).setNumTasks(3).shuffleGrouping(ROCKETSPOUT_ID);
 
         //解序列化付款信息,同时查看Tair 来自哪个交易平台
         CacheBolt cacheBolt=
                 new CacheBolt();
         builder.setBolt(CACHEBOLTID,cacheBolt
-                ,1).setNumTasks(7).shuffleGrouping(ROCKETSPOUT_ID);
+                ,7).setNumTasks(7).fieldsGrouping(ROCKETSPOUT_ID,new Fields("orderId"));
 
         //计算每分钟不同平台交易额比例的bolt
         MiniuteTbTmTradeBolt miniuteTbTmTradeBolt = new MiniuteTbTmTradeBolt();
         builder.setBolt(MINIUTETBTMTRADEBOLT_ID,miniuteTbTmTradeBolt,1).setNumTasks(3).
-                shuffleGrouping(CACHEBOLTID);
-
-        //每分钟不同客户端交易额计算的bolt
-        MiniutePcMbTradeBolt miniutePcMbTradeBolt = new MiniutePcMbTradeBolt();
-        builder.setBolt(MINIUTEPCMBTRADEBOLT_ID,miniutePcMbTradeBolt,1).setNumTasks(3).
                 shuffleGrouping(CACHEBOLTID);
 
         return builder;
