@@ -139,21 +139,19 @@ class PlatCache{
         cache = new ConcurrentHashMap<Long, OrderSimpleInfo>();
     }
 
-    public Plat getPlatAndIncrCalculatedPrice(Long orderId,Double price){
-        synchronized (cache) {
-            OrderSimpleInfo orderSimpleInfo = cache.get(orderId);
-            Plat plat;
-            if (orderSimpleInfo != null) {
-                orderSimpleInfo.incrCalculatedPrice(price);
-                plat = orderSimpleInfo.getPlat();
-                if (orderSimpleInfo.isFinish()) {
-                    cache.remove(orderId);
-                }
-            } else {
-                plat = null;
+    synchronized public Plat getPlatAndIncrCalculatedPrice(Long orderId,Double price){
+        OrderSimpleInfo orderSimpleInfo = cache.get(orderId);
+        Plat plat;
+        if (orderSimpleInfo != null) {
+            orderSimpleInfo.incrCalculatedPrice(price);
+            plat = orderSimpleInfo.getPlat();
+            if (orderSimpleInfo.isFinish()) {
+                cache.remove(orderId);
             }
-            return plat;
+        } else {
+            plat = null;
         }
+        return plat;
     }
 
     public void addOrderInfoToCache(OrderSimpleInfo orderSimpleInfo){
@@ -194,12 +192,10 @@ class PayCache{
         return cache.get(orderId);
     }
 
-    List<PaymentMessage> getPaymentMessagesByOrderIdAndRemove(Long orderId){
+    synchronized List<PaymentMessage> getPaymentMessagesByOrderIdAndRemove(Long orderId){
         List<PaymentMessage> paymentMessages;
-        synchronized (cache) {
-            paymentMessages = cache.get(orderId);
-            cache.remove(orderId);
-        }
+        paymentMessages = cache.get(orderId);
+        cache.remove(orderId);
         return paymentMessages;
     }
 
@@ -263,9 +259,8 @@ class ClearThread implements Runnable{
                         }
                         Long createTime = paymentMessage.getCreateTime();
                         Long minuteTime = (createTime/1000/60)*60;
-                        short plat_pc_mb = (short)3;
                         this.collector.emit(new Values(
-                                plat_tm_tb,plat_pc_mb,minuteTime,payAmount
+                                plat_tm_tb,minuteTime,payAmount
                         ));
                     }
                 }
