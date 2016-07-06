@@ -15,6 +15,7 @@ import org.apache.log4j.Logger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -40,6 +41,7 @@ public class CacheBolt extends BaseRichBolt{
         this.collector = outputCollector;
         platCache = new PlatCache();
         payCache = new PayCache();
+        new Thread(new ClearThread(collector,payCache,platCache)).start();
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -187,6 +189,10 @@ class PlatCache{
     public static boolean isEmpty(){
         return cache.size() == 0;
     }
+
+    boolean isOrderCome(Long orderId){
+        return cache.contains(orderId);
+    }
 }
 
 //用于缓存付款信息
@@ -234,5 +240,49 @@ class PayCache{
     public static boolean isEmpty(){
         return cache.size() == 0;
     }
+
+    public Set<Long> getPayOrderIdSet(){
+        return cache.keySet();
+    }
 }
 
+class ClearThread implements Runnable{
+
+    OutputCollector collector;
+    PayCache payCache;
+    PlatCache platCache;
+
+    ClearThread(OutputCollector collector,PayCache payCache,PlatCache platCache){
+        this.collector = collector;
+        this.payCache = payCache;
+        this.platCache = platCache;
+    }
+
+    @Override
+    public void run() {
+        while(true){
+            Set<Long> orderIdSet = payCache.getPayOrderIdSet();
+            for(Long orderId:orderIdSet){
+                if(platCache.isOrderCome(orderId)){
+                    List<PaymentMessage> paymentMessages = payCache.getPaymentMessagesByOrderIdAndRemove(orderId);
+                    for(PaymentMessage paymentMessage:paymentMessages){
+                        Double payAmount= paymentMessage.getPayAmount();
+                        Plat plat = platCache.getPlatAndIncrCalculatedPrice(orderId,payAmount);
+                        String plat_tm_tb ;
+                        if(plat==Plat.TAOBAO){
+                            plat_tm_tb = "tb";
+                        }else {
+                            plat_tm_tb = "tm";
+                        }
+                        Long createTime = paymentMessage.getCreateTime();
+                        Long minuteTime = (createTime/1000/60)*60;
+                        short plat_pc_mb = (short)3;
+                        this.collector.emit(new Values(
+                                plat_tm_tb,plat_pc_mb,minuteTime,payAmount
+                        ));
+                    }
+                }
+            }
+        }
+    }
+}
