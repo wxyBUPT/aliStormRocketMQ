@@ -2,6 +2,7 @@ package com.alibaba.middleware.race.jstorm.bolt.forUpdateTair;
 
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.tair.TairOperatorImpl;
+import com.taobao.tair.DataEntry;
 import org.apache.log4j.Logger;
 
 import java.util.*;
@@ -62,7 +63,12 @@ public class ReportPcMbRatioThread implements Runnable{
             try {
                 sb.append(RaceConfig.prex_ratio + currentMiniute + " : " + ratio);
                 sb.append("   ,  ");
-                tairOperator.write(RaceConfig.prex_ratio + currentMiniute, ratio);
+                String key = RaceConfig.prex_ratio + currentMiniute;
+                DataEntry tairEntry = tairOperator.get(key);
+                Thread.sleep(2);
+                if(ratio != (Double) tairEntry.getValue()) {
+                    tairOperator.write(key, ratio);
+                }
             }catch (Exception e){
                 LOG.error("Key: " + RaceConfig.prex_ratio + currentMiniute+ " has not been writen to Tair , ratio is : " + ratio);
                 LOG.trace(e.getStackTrace());

@@ -2,6 +2,7 @@ package com.alibaba.middleware.race.jstorm.bolt.forUpdateTair;
 
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.tair.TairOperatorImpl;
+import com.taobao.tair.DataEntry;
 import org.apache.log4j.Logger;
 
 import java.util.HashMap;
@@ -61,7 +62,11 @@ public class ReportTbTmTradeThread implements Runnable {
             }catch (Exception e){
             }
             try {
-                tairOperator.write(key, value);
+                DataEntry tairEntry = tairOperator.get(key);
+                Thread.sleep(2);
+                if(value  >= (Double)tairEntry.getValue()){
+                    tairOperator.write(key,value);
+                }
             }catch (Exception e){
                 LOG.error("Key: " + key + " has not been writen to Tair , value is : " + value );
                 LOG.trace(e.getStackTrace());
