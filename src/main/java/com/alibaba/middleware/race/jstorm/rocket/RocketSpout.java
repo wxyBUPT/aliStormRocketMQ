@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -238,7 +239,11 @@ public class RocketSpout implements IRichSpout,
         Double totalPrice = orderMessage.getTotalPrice();
         Plat plat = Plat.TAOBAO;
         OrderSimpleInfo orderSimpleInfo = new OrderSimpleInfo(plat,totalPrice,orderId);
-        orderMessageSendingQueue.offer(orderSimpleInfo);
+        try {
+            orderMessageSendingQueue.offer(orderSimpleInfo, 60, TimeUnit.MINUTES);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
 
     }
 
@@ -249,14 +254,18 @@ public class RocketSpout implements IRichSpout,
         Double totalPrice = orderMessage.getTotalPrice();
         Plat plat = Plat.TM;
         OrderSimpleInfo orderSimpleInfo = new OrderSimpleInfo(plat,totalPrice,orderId);
-        orderMessageSendingQueue.offer(orderSimpleInfo);
+        try {
+            orderMessageSendingQueue.offer(orderSimpleInfo, 60, TimeUnit.MINUTES);
+        }catch (Exception e){
+
+        }
     }
 
     private void consumePaymentMessage(MessageExt messageExt){
         byte[] body = messageExt.getBody();
         try {
             PaymentMessage paymentMessage = RaceUtil.readKryoObject(PaymentMessage.class, body);
-            paymentSendingQueue.offer(paymentMessage);
+            paymentSendingQueue.offer(paymentMessage,60,TimeUnit.MINUTES);
         }catch (Exception e){
             if(body.length==2&&body[0]==0&&body[1]==0){
                 LOG.info("Got payment message end signall");
